@@ -410,6 +410,7 @@ int DisplayManager::readSysfs(void) {
 		strcpy(buf, node->path);
 		strcat(buf, "/type");
 		fd = fopen(buf, "r");
+		if(NULL!=fd){
 		memset(buf, 0, BUFFER_LENGTH);
 		fgets(buf, BUFFER_LENGTH, fd);
 		fclose(fd);
@@ -428,26 +429,36 @@ int DisplayManager::readSysfs(void) {
 			node->type = DISPLAY_INTERFACE_HDMI;
 		else if(!strcmp(buf, DISPLAY_TYPE_LCD))
 			node->type = DISPLAY_INTERFACE_LCD;
-		
+		}else{
+			ALOGE("[%s] [errno=%s] %s", __FUNCTION__, strerror(errno), buf);
+		}
 		// Read node property;
 		memset(buf, 0, BUFFER_LENGTH);
 		strcpy(buf, node->path);
 		strcat(buf, "/property");
 		fd = fopen(buf, "r");
-		memset(buf, 0, BUFFER_LENGTH);
-		fgets(buf, BUFFER_LENGTH, fd);
-		node->property = atoi(buf);
-		fclose(fd);
-		
+		if(NULL!=fd){
+			memset(buf, 0, BUFFER_LENGTH);
+			fgets(buf, BUFFER_LENGTH, fd);
+			node->property = atoi(buf);
+			fclose(fd);
+		}else{
+		  //node->property = 0;
+			ALOGE("[%s] [errno=%s] %s", __FUNCTION__, strerror(errno), buf);
+		}
 		// Read node name
 		memset(buf, 0, BUFFER_LENGTH);
 		strcpy(buf, node->path);
 		strcat(buf, "/name");
 		fd = fopen(buf, "r");
-		fgets(node->name, NAME_LENGTH, fd);
-		if(node->name[strlen(node->name) - 1] == '\n')
-			node->name[strlen(node->name) - 1] = 0;
-		fclose(fd);
+		if(NULL!=fd){
+			fgets(node->name, NAME_LENGTH, fd);
+			if(node->name[strlen(node->name) - 1] == '\n')
+				node->name[strlen(node->name) - 1] = 0;
+			fclose(fd);
+		}else{
+			ALOGE("[%s] [errno=%s] %s", __FUNCTION__, strerror(errno), buf);
+		}
 		
 		// Read enable;
 		operateIfaceEnable(node, DISPLAY_OPERATE_READ);
