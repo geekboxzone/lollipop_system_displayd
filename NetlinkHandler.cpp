@@ -57,7 +57,8 @@ void NetlinkHandler::onEvent(NetlinkEvent *evt) {
         if (action == evt->NlActionAdd) {
             const char *iface = evt->findParam("INTERFACE");
             const char *screen = evt->findParam("SCREEN");
-            ALOGW("iface id %s screen is %s", iface, screen);
+            if(iface && screen)
+            	ALOGW("iface id %s screen is %s", iface, screen);
             notifyInterfaceAdded(iface, screen);
         } else if (action == evt->NlActionRemove) {
             const char *iface = evt->findParam("INTERFACE");
@@ -75,7 +76,7 @@ void NetlinkHandler::onEvent(NetlinkEvent *evt) {
 void NetlinkHandler::notifyInterfaceAdded(const char *name, const char *screen) {
     char msg[255];
     int display = 0;
-    if(!strcmp(screen, "1"))
+    if(screen && !strcmp(screen, "1"))
     	display = 1;
     
    	mNm->mDisplayManager->setHDMIEnable(display);
@@ -88,7 +89,7 @@ void NetlinkHandler::notifyInterfaceAdded(const char *name, const char *screen) 
 void NetlinkHandler::notifyInterfaceRemoved(const char *name, const char *screen) {
     char msg[255];
     int display = 0;
-    if(!strcmp(screen, "1"))
+    if(screen && !strcmp(screen, "1"))
     	display = 1;
     mNm->mDisplayManager->setHDMIDisable(display);
     snprintf(msg, sizeof(msg), "Iface removed %s", name);

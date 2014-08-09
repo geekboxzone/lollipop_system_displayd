@@ -112,11 +112,13 @@ void DisplayManager::init() {
 		}
 	}
 	for(node = main_display_list; node != NULL; node = node->next) {
-		if(node->enable == 1)
-		{
+		if(node->enable == 1) {
 			operateIfaceMode(node, DISPLAY_OPERATE_WRITE, node->mode);
 			found = 1;
 		}
+		// HDMI device is always enabled
+		if (node->type == DISPLAY_INTERFACE_HDMI)
+			node->enable = 1;
 		operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
 		updatesinkaudioinfo(node);
 	}
@@ -145,11 +147,13 @@ void DisplayManager::init() {
 	}
 	found = 0;
 	for(node = aux_display_list; node != NULL; node = node->next) {
-		if(node->enable == 1)
-		{
+		if(node->enable == 1) {
 			operateIfaceMode(node, DISPLAY_OPERATE_WRITE, node->mode);
 			found = 1;
 		}
+		// HDMI device is always enabled
+		if (node->type == DISPLAY_INTERFACE_HDMI)
+			node->enable = 1;
 		operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
 	}
 	ALOGD("aux display enabled interface found %d", found);
@@ -700,7 +704,8 @@ void DisplayManager::getCurIface(SocketClient *cli, int display) {
 	
 	for(node = head; node != NULL; node = node->next)
 	{		
-		if(node->enable == 1) {
+		readIfaceConnect(node);
+		if(node->enable == 1 && node->connect == 1) {
 			cli->sendMsg(ResponseCode::CommandOkay, type2string(node->type), false);
 			return;
 		}
@@ -846,7 +851,7 @@ void DisplayManager::setHDMIEnable(int display) {
 		if(node->type == DISPLAY_INTERFACE_HDMI) {
 			iface_hdmi = node;
 		}
-		if(node->enable == 1) {
+		if(node->enable == 1 && node != iface_hdmi) {
 			iface_enabled = node;
 		}
 	}
@@ -861,9 +866,9 @@ void DisplayManager::setHDMIEnable(int display) {
 		{
 			iface_enabled->enable = 0;
 			operateIfaceEnable(iface_enabled, DISPLAY_OPERATE_WRITE);
-			iface_hdmi->enable = 1;
-			operateIfaceMode(iface_hdmi, DISPLAY_OPERATE_WRITE, iface_hdmi->mode);
-			operateIfaceEnable(iface_hdmi, DISPLAY_OPERATE_WRITE);
+//			iface_hdmi->enable = 1;
+//			operateIfaceMode(iface_hdmi, DISPLAY_OPERATE_WRITE, iface_hdmi->mode);
+//			operateIfaceEnable(iface_hdmi, DISPLAY_OPERATE_WRITE);
 		}
 	}
 	usleep(500000);
@@ -911,15 +916,15 @@ void DisplayManager::setHDMIDisable(int display) {
 		
 	if(iface_hdmi == iface_enabled && iface_hdmi != NULL) {
 		if(ENABLE_AUTO_SWITCH) {
-			iface_hdmi->enable = 0;
-			operateIfaceEnable(iface_hdmi, DISPLAY_OPERATE_WRITE);			
-			for(i=0; i<100; i++)
-			{
-				usleep(10000);
-				operateIfaceEnable(iface_hdmi, DISPLAY_OPERATE_READ);
-				if(iface_hdmi->enable == 0)
-				break;
-			}
+//			iface_hdmi->enable = 0;
+//			operateIfaceEnable(iface_hdmi, DISPLAY_OPERATE_WRITE);			
+//			for(i=0; i<100; i++)
+//			{
+//				usleep(10000);
+//				operateIfaceEnable(iface_hdmi, DISPLAY_OPERATE_READ);
+//				if(iface_hdmi->enable == 0)
+//				break;
+//			}
 			
 			for(node = head; node != NULL; node = node->next) {
 				readIfaceConnect(node);

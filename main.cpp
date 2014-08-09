@@ -29,7 +29,8 @@
  *	2.2		Audo detect scale sysfs node.								2012-12-18		Zheng Yang
  *	2.3		1. Rename rk29_display.cfg to display.cfg						2014-06-10		Zheng Yang
  			2. Only save config when user modified setting.
- *	2.4		support bcsh :brightness contrast sat_con hue				2014-06-10		aishaoxiang
+ *	2.4		support bcsh :brightness contrast sat_con hue						2014-06-10		Aishaoxiang
+ *	2.5		DisplayManager: hdmi interface is always enabled.					2014-08-09		Zheng Yang
  */
 
 #include <stdio.h>
