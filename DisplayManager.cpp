@@ -835,7 +835,7 @@ int DisplayManager::setMode(int display, char* iface, char *mode) {
 
 void DisplayManager::setHDMIEnable(int display) {
 	struct displaynode *head, *node, *iface_hdmi = NULL, *iface_enabled = NULL;
-	int enable;
+	int enable, count = 0;
 	
 	if(!powerup)
 		return;
@@ -854,7 +854,11 @@ void DisplayManager::setHDMIEnable(int display) {
 		if(node->enable == 1 && node != iface_hdmi) {
 			iface_enabled = node;
 		}
+		count++;
 	}
+	//Theres is only one interface in input screen, no need to auto switch.
+	if (count == 1)
+		return;
 	readIfaceConnect(iface_hdmi);
 	if(iface_hdmi == iface_enabled && iface_hdmi != NULL) {
 		operateIfaceMode(iface_hdmi, DISPLAY_OPERATE_WRITE, iface_hdmi->mode);

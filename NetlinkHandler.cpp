@@ -63,6 +63,7 @@ void NetlinkHandler::onEvent(NetlinkEvent *evt) {
         } else if (action == evt->NlActionRemove) {
             const char *iface = evt->findParam("INTERFACE");
             const char *screen = evt->findParam("SCREEN");
+            if(iface && screen)
             ALOGW("iface id %s screen is %s", iface, screen);
             notifyInterfaceRemoved(iface, screen);
         } else if (action == evt->NlActionChange) {
