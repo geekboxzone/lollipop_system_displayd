@@ -49,6 +49,7 @@ class DisplayManager {
 		struct displaynode *aux_display_list;
 		int		powerup;
 		int 	readConfig(void);
+                char*   readUbootConfig(void);
 		void 	saveConfig(void);
 		int 	readSysfs(void);
 		int 	operateIfaceEnable(struct displaynode *node, int operate);
