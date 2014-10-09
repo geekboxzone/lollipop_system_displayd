@@ -485,7 +485,9 @@ int DisplayManager::readSysfs(void) {
 	return 0;
 }
 
-#define BASEPARAMER_FILE  "/dev/block/platform/ff0f0000.rksdmmc/by-name/baseparamer"
+#define BASEPARAMER_FILE  "/dev/block/platform/1021c000.rksdmmc/by-name/baseparamer"
+#define BASEPARAMER_FILE_EMMC32  "/dev/block/platform/ff0f0000.rksdmmc/by-name/baseparamer"
+#define BASEPARAMER_FILE_NAND  "/dev/block/rknand_baseparamer"
 struct HW_BASE_PARAMETER
 {
        unsigned int xres;
@@ -498,6 +500,7 @@ struct HW_BASE_PARAMETER
 
 void DisplayManager::saveConfig(void) {
 	FILE *fd = NULL;
+	FILE *file = NULL;
 	struct displaynode *node;
 	char buf[BUFFER_LENGTH];
 
@@ -518,7 +521,13 @@ void DisplayManager::saveConfig(void) {
                fclose(fd);
         }
        
-       FILE *file = fopen(BASEPARAMER_FILE,"wb");
+       file = fopen(BASEPARAMER_FILE,"wb");
+       if(file==NULL){
+       file = fopen(BASEPARAMER_FILE_NAND,"wb");
+       }
+       if(file==NULL){
+       file = fopen(BASEPARAMER_FILE_EMMC32,"wb");
+       }
 if(file != NULL)
     {
         for(node = main_display_list; node != NULL; node = node->next) {
@@ -530,10 +539,10 @@ if(file != NULL)
         	     hw_base_parameter.type = node->type;
                if(strchr(node->mode, 'p')){
                        sscanf(node->mode, "%dx%dp-%d", &hw_base_parameter.xres, &hw_base_parameter.yres, &hw_base_parameter.refresh);
-                       hw_base_parameter.interlaced = 1;
+                       hw_base_parameter.interlaced = 0;
                }else if(strchr(node->mode, 'i')){
                        sscanf(node->mode, "%dx%di-%d", &hw_base_parameter.xres, &hw_base_parameter.yres, &hw_base_parameter.refresh);
-                       hw_base_parameter.interlaced = 0;
+                       hw_base_parameter.interlaced = 1;
                }else {
                        fclose(file);
                                return;
@@ -554,8 +563,13 @@ char* DisplayManager::readUbootConfig(void) {
 
 	file = fopen(BASEPARAMER_FILE, "r");
 	if(file == NULL ) {
-		ALOGE("%s not exist", BASEPARAMER_FILE);
+         file = fopen(BASEPARAMER_FILE_NAND, "r");
+            if(file == NULL ) 
+             file = fopen(BASEPARAMER_FILE_EMMC32, "r");
+             if(file == NULL ) {
+		ALOGE("%s not exist", BASEPARAMER_FILE_EMMC32);
 		return NULL;
+             }
 	}
 	
 	if(file != NULL)
@@ -574,9 +588,9 @@ char* DisplayManager::readUbootConfig(void) {
         struct HW_BASE_PARAMETER hw_base_parameter;
         fread((void*)&hw_base_parameter,sizeof(HW_BASE_PARAMETER),1,file);
         fclose(file);
-        if(hw_base_parameter.interlaced== 1)
+        if(hw_base_parameter.interlaced== 0)
         		sprintf(mode, "%dx%dp-%d", hw_base_parameter.xres, hw_base_parameter.yres, hw_base_parameter.refresh);
-        else if(hw_base_parameter.interlaced== 0)
+        else if(hw_base_parameter.interlaced== 1)
         		sprintf(mode, "%dx%di-%d", hw_base_parameter.xres, hw_base_parameter.yres, hw_base_parameter.refresh);
         	else {
         		ALOGE("getBASEPARAMERValue(), BASEPARAME data's length is error");
@@ -713,7 +727,8 @@ int DisplayManager::readConfig(void) {
 		value = readUbootConfig();
 		if((value!=NULL) && (node->type == DISPLAY_INTERFACE_HDMI)){
 		        memset(node->mode, 0, MODE_LENGTH);
-			memcpy(node->mode, value, sizeof(value));	
+			memcpy(node->mode, value, MODE_LENGTH);
+                       // ALOGD("[%s] iface %d basemode %s\n mode %s\n", __FUNCTION__,node->type,value,node->mode);	
 		}
 		else if(ptr_space > ptr) {
 			memset(node->mode, 0, MODE_LENGTH);
