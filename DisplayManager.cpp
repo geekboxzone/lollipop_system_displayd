@@ -512,32 +512,33 @@ void DisplayManager::saveConfig(void) {
 	struct file_base_paramer base_paramer;
 	
 	memset(&base_paramer,0,sizeof(base_paramer));
-
+	
 	fd = fopen(DISPLAY_CONFIG_FILE, "w");
+	
+	if(fd != NULL) {
+		for(node = main_display_list; node != NULL; node = node->next) {
+		       memset(buf, 0 , BUFFER_LENGTH);
+		       sprintf(buf, "display=%d,iface=%d,enable=%d,mode=%s\n", node->property, node->type, node->enable, node->mode);
+		       fwrite(buf, 1, strlen(buf), fd);
+		}
+		for(node = aux_display_list; node != NULL; node = node->next) {
+		       memset(buf, 0 , BUFFER_LENGTH);
+		       sprintf(buf, "display=%d,iface=%d,enable=%d,mode=%s\n", node->property, node->type, node->enable, node->mode);
+		       fwrite(buf, 1, strlen(buf), fd);
+		}
+		fflush(fd);
+		fclose(fd);
+	}
 
-       if(fd != NULL) {
-               for(node = main_display_list; node != NULL; node = node->next) {
-                       memset(buf, 0 , BUFFER_LENGTH);
-                       sprintf(buf, "display=%d,iface=%d,enable=%d,mode=%s\n", node->property, node->type, node->enable, node->mode);
-                       fwrite(buf, 1, strlen(buf), fd);
-               }
-               for(node = aux_display_list; node != NULL; node = node->next) {
-                       memset(buf, 0 , BUFFER_LENGTH);
-                       sprintf(buf, "display=%d,iface=%d,enable=%d,mode=%s\n", node->property, node->type, node->enable, node->mode);
-                       fwrite(buf, 1, strlen(buf), fd);
-               }
-               fflush(fd);
-               fclose(fd);
-        }
-       
-       file = fopen(BASEPARAMER_FILE,"rb");
-       if(file==NULL){
-       file = fopen(BASEPARAMER_FILE_NAND,"rb");
-       }
-       if(file==NULL){
-       file = fopen(BASEPARAMER_FILE_EMMC32,"rb");
-       }
-
+	file = fopen(BASEPARAMER_FILE,"rb");
+	if (file == NULL)
+		file = fopen(BASEPARAMER_FILE_NAND,"rb");
+	if (file == NULL)
+		file = fopen(BASEPARAMER_FILE_EMMC32,"rb");
+	if (file == NULL) {
+		ALOGW("base paramter file can not be opened");
+		return;
+	}
 	// caculate file's size and read it
 	fseek(file,0L,SEEK_END);
 	int length = ftell(file);
@@ -549,68 +550,68 @@ void DisplayManager::saveConfig(void) {
 		file = NULL;
 		return;
 	}
-
+	
 	fread((void*)&base_paramer,sizeof(file_base_paramer),1,file);
-
+	
 	fclose(file);
-        file = NULL;
-
+	file = NULL;
+	
 	file = fopen(BASEPARAMER_FILE,"wb");
 	if(file==NULL){
-		file = fopen(BASEPARAMER_FILE_NAND,"wb");
+	file = fopen(BASEPARAMER_FILE_NAND,"wb");
 	}
 	if(file==NULL){
-		file = fopen(BASEPARAMER_FILE_EMMC32,"wb");
+	file = fopen(BASEPARAMER_FILE_EMMC32,"wb");
 	}
-
+	
 	if(file != NULL)
-    {
-		for(node = main_display_list; node != NULL; node = node->next)
+	{
+	for(node = main_display_list; node != NULL; node = node->next)
+	{
+		if(node->type == DISPLAY_INTERFACE_HDMI)
 		{
-			if(node->type == DISPLAY_INTERFACE_HDMI)
+			if(node->mode)
 			{
-				if(node->mode)
-				{
-					base_paramer.hdmi.type = node->type;
-					if(strchr(node->mode, 'p')){
-						sscanf(node->mode, "%dx%dp-%d", &base_paramer.hdmi.xres, &base_paramer.hdmi.yres, &base_paramer.hdmi.refresh);
-						base_paramer.hdmi.interlaced = 0;
-					}else if(strchr(node->mode, 'i')){
-						sscanf(node->mode, "%dx%di-%d", &base_paramer.hdmi.xres, &base_paramer.hdmi.yres, &base_paramer.hdmi.refresh);
-						base_paramer.hdmi.interlaced = 1;
-					}
-					ALOGD("[%s] hdmi_mode %s\n", __FUNCTION__,node->mode);
+				base_paramer.hdmi.type = node->type;
+				if(strchr(node->mode, 'p')){
+					sscanf(node->mode, "%dx%dp-%d", &base_paramer.hdmi.xres, &base_paramer.hdmi.yres, &base_paramer.hdmi.refresh);
+					base_paramer.hdmi.interlaced = 0;
+				}else if(strchr(node->mode, 'i')){
+					sscanf(node->mode, "%dx%di-%d", &base_paramer.hdmi.xres, &base_paramer.hdmi.yres, &base_paramer.hdmi.refresh);
+					base_paramer.hdmi.interlaced = 1;
 				}
-			}
-			else if(node->type == DISPLAY_INTERFACE_TV)
-			{
-				if(node->mode) {
-					sscanf(node->mode, "%dx%di-%d", &base_paramer.tve.xres, &base_paramer.tve.yres, &base_paramer.tve.refresh);
-					base_paramer.tve.interlaced = 1;
-					ALOGD("[%s] tve_mode  %s\n", __FUNCTION__,node->mode);
-				}
+				ALOGD("[%s] hdmi_mode %s\n", __FUNCTION__,node->mode);
 			}
 		}
-
-		fwrite(&base_paramer,sizeof(base_paramer),1,file);
-		fflush(file);
-
-		ALOGD("[%s] hdmi:%d,%d,%d,%d,%d,%d\n", __FUNCTION__,
-		base_paramer.hdmi.xres,
-		base_paramer.hdmi.yres,
-		base_paramer.hdmi.interlaced,
-		base_paramer.hdmi.type,
-		base_paramer.hdmi.refresh,
-		base_paramer.hdmi.reserve);
-
-		ALOGD("[%s] tve:%d,%d,%d,%d,%d,%d\n", __FUNCTION__,
-		base_paramer.tve.xres,
-		base_paramer.tve.yres,
-		base_paramer.tve.interlaced,
-		base_paramer.tve.type,
-		base_paramer.tve.refresh,
-		base_paramer.tve.reserve);
-		fclose(file);
+		else if(node->type == DISPLAY_INTERFACE_TV)
+		{
+			if(node->mode) {
+				sscanf(node->mode, "%dx%di-%d", &base_paramer.tve.xres, &base_paramer.tve.yres, &base_paramer.tve.refresh);
+				base_paramer.tve.interlaced = 1;
+				ALOGD("[%s] tve_mode  %s\n", __FUNCTION__,node->mode);
+			}
+		}
+	}
+	
+	fwrite(&base_paramer,sizeof(base_paramer),1,file);
+	fflush(file);
+	
+	ALOGD("[%s] hdmi:%d,%d,%d,%d,%d,%d\n", __FUNCTION__,
+	base_paramer.hdmi.xres,
+	base_paramer.hdmi.yres,
+	base_paramer.hdmi.interlaced,
+	base_paramer.hdmi.type,
+	base_paramer.hdmi.refresh,
+	base_paramer.hdmi.reserve);
+	
+	ALOGD("[%s] tve:%d,%d,%d,%d,%d,%d\n", __FUNCTION__,
+	base_paramer.tve.xres,
+	base_paramer.tve.yres,
+	base_paramer.tve.interlaced,
+	base_paramer.tve.type,
+	base_paramer.tve.refresh,
+	base_paramer.tve.reserve);
+	fclose(file);
 	}
 	sync();
 }
