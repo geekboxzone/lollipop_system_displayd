@@ -47,7 +47,7 @@ enum {
 };
 
 DisplayManager::DisplayManager() {
-	
+
 	ALOGD("[%s] VER 3.0", __FUNCTION__);
 	powerup = 0;
 	#if (DISPLAY_UNTIL_WAKEUP == 0)
@@ -71,7 +71,7 @@ const char *DisplayManager::type2string(int type) {
 		case DISPLAY_INTERFACE_LCD:
 			return DISPLAY_TYPE_LCD;
 	}
-	return NULL;	
+	return NULL;
 }
 
 int DisplayManager::string2type(const char *str) {
@@ -84,7 +84,7 @@ int DisplayManager::string2type(const char *str) {
 	else if(!strcmp(str, DISPLAY_TYPE_HDMI))
 		return DISPLAY_INTERFACE_HDMI;
 	else if(!strcmp(str, DISPLAY_TYPE_LCD))
-		return DISPLAY_INTERFACE_LCD;	
+		return DISPLAY_INTERFACE_LCD;
 	else
 		return 0;
 }
@@ -92,7 +92,7 @@ int DisplayManager::string2type(const char *str) {
 void DisplayManager::init() {
 	int rc, found = 0, i, enable;
 	struct displaynode *head, *node;
-	
+
 	if(powerup)	return;
 	powerup = 1;
 	main_display_list = NULL;
@@ -143,7 +143,7 @@ void DisplayManager::init() {
 			operateIfaceEnable(main_display_list, DISPLAY_OPERATE_WRITE);
 			updatesinkaudioinfo(main_display_list);
 		}
-			
+
 	}
 	found = 0;
 	for(node = aux_display_list; node != NULL; node = node->next) {
@@ -175,14 +175,14 @@ void DisplayManager::init() {
 			aux_display_list->enable = 1;
 			operateIfaceEnable(aux_display_list, DISPLAY_OPERATE_WRITE);
 		}
-			
+
 	}
 }
 
 void DisplayManager::led_ctrl(struct displaynode *node) {
 	FILE *fd = NULL;
 	char buf[BUFFER_LENGTH];
-	
+
 	memset(buf, 0, BUFFER_LENGTH);
 	sprintf(buf, "/sys/class/leds/%s/brightness", node->name);
 	fd = fopen(buf, "w");
@@ -190,7 +190,7 @@ void DisplayManager::led_ctrl(struct displaynode *node) {
 		ALOGW("interface %d not support led\n", node->type);
 		return;
 	}
-	
+
 	if(node->enable)
 		fputc('1', fd);
 	else
@@ -199,14 +199,14 @@ void DisplayManager::led_ctrl(struct displaynode *node) {
 	fclose(fd);
 }
 
-int DisplayManager::operateIfaceEnable(struct displaynode *node, int operate) {	
+int DisplayManager::operateIfaceEnable(struct displaynode *node, int operate) {
 	FILE *fd = NULL;
 	char *buf = NULL;
-	
+
 	buf = (char*)malloc(BUFFER_LENGTH);
 	if(buf == NULL)
 		return -1;
-	
+
 	// Read enable;
 	memset(buf, 0, BUFFER_LENGTH);
 	strcpy(buf, node->path);
@@ -236,14 +236,14 @@ int	DisplayManager::readIfaceConnect(struct displaynode *node) {
 	FILE *fd = NULL;
 	char *buf = NULL;
 	int connect;
-	
+
 	if(node == NULL)
 		return -1;
-	
+
 	buf = (char*)malloc(BUFFER_LENGTH);
 	if(buf == NULL)
 		return -1;
-	
+
 	// Read enable;
 	memset(buf, 0, BUFFER_LENGTH);
 	strcpy(buf, node->path);
@@ -261,24 +261,24 @@ int	DisplayManager::operateIfaceMode(struct displaynode *node, int type, char *m
 	FILE *fd = NULL;
 	char *buf = NULL;
 	int	modelen = 0;
-	
+
 	if(node == NULL || mode == NULL)
 		return -1;
-		
+
 	buf = (char*)malloc(BUFFER_LENGTH);
 	if(buf == NULL)
 		return -1;
-	
+
 	if(type == DISPLAY_OPERATE_READ) {
 		memset(buf, 0, BUFFER_LENGTH);
 		strcpy(buf, node->path);
 		strcat(buf, "/mode");
-		
+
 		fd = fopen(buf, "r");
 		memset(buf, 0, BUFFER_LENGTH);
 		fgets(buf, MODE_LENGTH, fd);
 		fclose(fd);
-	
+
 		//There is a '\n' at last char, should be delelted.
 		modelen = strlen(buf);
 		if(modelen)
@@ -289,12 +289,12 @@ int	DisplayManager::operateIfaceMode(struct displaynode *node, int type, char *m
 		}
 	}else if(type == DISPLAY_OPERATE_WRITE) {
 		ALOGD("[%s] property %d iface %d type %d mode %s\n", __FUNCTION__, node->property, node->type, type, mode);
-		// Check the mode inputted is exist in mode list. 
+		// Check the mode inputted is exist in mode list.
 		memset(buf, 0, BUFFER_LENGTH);
 		strcpy(buf, node->path);
 		strcat(buf, "/modes");
 		fd = fopen(buf, "r");
-	
+
 		int exist = 0;
 		memset(buf, 0, BUFFER_LENGTH);
 		while(fgets(buf, BUFFER_LENGTH, fd) != NULL) {
@@ -314,7 +314,7 @@ int	DisplayManager::operateIfaceMode(struct displaynode *node, int type, char *m
 				free(buf);
 			return 0;
 			//operateIfaceMode(node, DISPLAY_OPERATE_READ, mode);
-		}	
+		}
 		// Set the mode.
 		memset(buf, 0, BUFFER_LENGTH);
 		strcpy(buf, node->path);
@@ -330,7 +330,7 @@ int	DisplayManager::operateIfaceMode(struct displaynode *node, int type, char *m
 			strcpy(node->mode, mode);
 		}
 	}
-	
+
 	free(buf);
 	return 0;
 }
@@ -338,10 +338,10 @@ int	DisplayManager::operateIfaceMode(struct displaynode *node, int type, char *m
 void DisplayManager::display_list_add(struct displaynode *node)
 {
 	struct displaynode *head = NULL, *pos;
-	
-	ALOGD("[%s] display %d iface %s connect %d enable %d mode %s\n", __FUNCTION__, 
+
+	ALOGD("[%s] display %d iface %s connect %d enable %d mode %s\n", __FUNCTION__,
 			node->property, type2string(node->type), node->connect, node->enable, node->mode);
-	
+
 	if(node->property == MAIN_DISPLAY) {
 		if(main_display_list == NULL)
 			main_display_list = node;
@@ -356,7 +356,7 @@ void DisplayManager::display_list_add(struct displaynode *node)
 	}
 	if(head == NULL) {
 		return;
-	}	
+	}
 	// input node priority is higher than nodes in list
 	if(node->type > head->type)
 	{
@@ -368,7 +368,7 @@ void DisplayManager::display_list_add(struct displaynode *node)
 			aux_display_list = node;
 		return;
 	}
-	
+
 	// input node priority is lower than first node
 	for(pos = head; pos->next != NULL; pos = pos->next)
 	{
@@ -386,19 +386,19 @@ int DisplayManager::readSysfs(void) {
 	char buf[BUFFER_LENGTH];
 	int i, rc;
 	struct displaynode *node;
-	
+
 	dir = opendir(DISPLAY_SYSFS_NODE);
 	if(dir == NULL)
 	{
 		ALOGE("[%s] Cannot open sysfs display node", __FUNCTION__);
 		return -1;
 	}
-	
+
 	while((dirent = readdir(dir)) != NULL)
 	{
 		if(!strcmp(dirent->d_name, ".") || !strcmp(dirent->d_name, ".."))
 			continue;
-		
+
 		node = (struct displaynode*)malloc(sizeof(struct displaynode));
 		if(node == NULL) {
 			ALOGE("[%s] Cannot malloc memory for display node", __FUNCTION__);
@@ -408,7 +408,7 @@ int DisplayManager::readSysfs(void) {
 		// Get node path
 		strcpy(node->path, DISPLAY_SYSFS_NODE);
 		strcat(node->path, dirent->d_name);
-		
+
 		// Read node type
 		memset(buf, 0, BUFFER_LENGTH);
 		strcpy(buf, node->path);
@@ -422,7 +422,7 @@ int DisplayManager::readSysfs(void) {
 		if(strlen(buf)) {
 			buf[strlen(buf)-1] = 0;
 		}
-		
+
 		if(!strcmp(buf, DISPLAY_TYPE_TV))
 			node->type = DISPLAY_INTERFACE_TV;
 		else if(!strcmp(buf, DISPLAY_TYPE_YPbPr))
@@ -463,25 +463,25 @@ int DisplayManager::readSysfs(void) {
 		}else{
 			ALOGE("[%s] [errno=%s] %s", __FUNCTION__, strerror(errno), buf);
 		}
-		
+
 		// Read enable;
 		operateIfaceEnable(node, DISPLAY_OPERATE_READ);
-			
+
 		// Read connect
 		readIfaceConnect(node);
-		
+
 		// When power up, hdmi is enabled whether it is connected or not.
 		if(node->connect == 0 && (node->enable == 1) )
 			node->enable = 0;
-		
+
 		// Read mode;
 		operateIfaceMode(node, DISPLAY_OPERATE_READ, node->mode);
-		
+
 		display_list_add(node);
 
 	}
 	closedir(dir);
-	
+
 	return 0;
 }
 
@@ -510,11 +510,11 @@ void DisplayManager::saveConfig(void) {
 	struct displaynode *node;
 	char buf[BUFFER_LENGTH];
 	struct file_base_paramer base_paramer;
-	
+
 	memset(&base_paramer,0,sizeof(base_paramer));
-	
+
 	fd = fopen(DISPLAY_CONFIG_FILE, "w");
-	
+
 	if(fd != NULL) {
 		for(node = main_display_list; node != NULL; node = node->next) {
 		       memset(buf, 0 , BUFFER_LENGTH);
@@ -550,12 +550,12 @@ void DisplayManager::saveConfig(void) {
 		file = NULL;
 		return;
 	}
-	
+
 	fread((void*)&base_paramer,sizeof(file_base_paramer),1,file);
-	
+
 	fclose(file);
 	file = NULL;
-	
+
 	file = fopen(BASEPARAMER_FILE,"wb");
 	if(file==NULL){
 	file = fopen(BASEPARAMER_FILE_NAND,"wb");
@@ -563,7 +563,7 @@ void DisplayManager::saveConfig(void) {
 	if(file==NULL){
 	file = fopen(BASEPARAMER_FILE_EMMC32,"wb");
 	}
-	
+
 	if(file != NULL)
 	{
 	for(node = main_display_list; node != NULL; node = node->next)
@@ -592,10 +592,10 @@ void DisplayManager::saveConfig(void) {
 			}
 		}
 	}
-	
+
 	fwrite(&base_paramer,sizeof(base_paramer),1,file);
 	fflush(file);
-	
+
 	ALOGD("[%s] hdmi:%d,%d,%d,%d,%d,%d\n", __FUNCTION__,
 	base_paramer.hdmi.xres,
 	base_paramer.hdmi.yres,
@@ -603,7 +603,7 @@ void DisplayManager::saveConfig(void) {
 	base_paramer.hdmi.type,
 	base_paramer.hdmi.refresh,
 	base_paramer.hdmi.reserve);
-	
+
 	ALOGD("[%s] tve:%d,%d,%d,%d,%d,%d\n", __FUNCTION__,
 	base_paramer.tve.xres,
 	base_paramer.tve.yres,
@@ -625,14 +625,14 @@ char* DisplayManager::readUbootConfig(char *hdmi_mode, char *tve_mode)
 	file = fopen(BASEPARAMER_FILE, "r");
 	if(file == NULL ) {
          file = fopen(BASEPARAMER_FILE_NAND, "r");
-            if(file == NULL ) 
+            if(file == NULL )
              file = fopen(BASEPARAMER_FILE_EMMC32, "r");
              if(file == NULL ) {
 		ALOGE("%s not exist", BASEPARAMER_FILE_EMMC32);
 		return NULL;
              }
 	}
-	
+
 	if(file != NULL)
 	{
 		// caculate file's size and read it
@@ -669,12 +669,12 @@ int DisplayManager::readConfig(void) {
 	int rc = 0, i = 0, display, type, enable;
 	int main_enabled = 0, aux_enabled = 0;
 	int *enabled;
-		
+
 	if(buf == NULL) {
 		ALOGE("setHDMIEnable no memeory malloc buf\n");
 		return -1;
 	}
-	
+
 	fd = fopen(DISPLAY_CONFIG_FILE, "r");
 	if(fd == NULL ) {
 		ALOGE("%s not exist", DISPLAY_CONFIG_FILE);
@@ -685,7 +685,7 @@ int DisplayManager::readConfig(void) {
 	memset(buf, 0 , BUFFER_LENGTH);
 	while(fgets(buf, BUFFER_LENGTH, fd) != NULL) {
 		ALOGD("read cfg: %s", buf);
-		
+
 		// Parse iface property
 		ptr = buf;
 		if(memcmp(ptr, "display=", 8)) {
@@ -696,8 +696,8 @@ int DisplayManager::readConfig(void) {
 		ptr += 8;
 		ptr_space = strchr(ptr, ',');
 		display = atoi(&ptr[0]);
-		
-		// Parse iface type. 
+
+		// Parse iface type.
 		ptr = ptr_space + 1;
 		if(memcmp(ptr, "iface=", 6)) {
 			ALOGE("iface error");
@@ -708,7 +708,7 @@ int DisplayManager::readConfig(void) {
 		ptr_space = strchr(ptr, ',');
 		type = atoi(&ptr[0]);
 		// Check if this type exist in sysfs
-		
+
 		if(display == MAIN_DISPLAY) {
 			head = main_display_list;
 			enabled = &main_enabled;
@@ -721,9 +721,9 @@ int DisplayManager::readConfig(void) {
 			if(node->type == type)
 				break;
 			#if ENABLE_AUTO_SWITCH
-			// Sometime display interface listed in sysfs is different in various kernel, 
-			// when new interface which is not exist in config file appeared, we should 
-			// check it is connected or not.  
+			// Sometime display interface listed in sysfs is different in various kernel,
+			// when new interface which is not exist in config file appeared, we should
+			// check it is connected or not.
 			if(*enabled == 0) {
 				if(node->connect) {
 					node->enable = 1;
@@ -737,8 +737,8 @@ int DisplayManager::readConfig(void) {
 			continue;
 		}
 		ptr = ptr_space + 1;
-		
-		// Parse enable value. 
+
+		// Parse enable value.
 		if(memcmp(ptr, "enable=", 7)) {
 			ALOGE("enable error");
 			rc = -1;
@@ -748,7 +748,7 @@ int DisplayManager::readConfig(void) {
 		ptr_space = strchr(ptr, ',');
 		enable = atoi(&ptr[0]);
 		#if ENABLE_AUTO_SWITCH
-		// If enable is true in configure file, check if iface is connected or not. 
+		// If enable is true in configure file, check if iface is connected or not.
 		// Because YPbPr and CVBS is output by RK1000, if mode enabled in configure
 		// was YPbPr or CVBS, assume it is connected.
 		if(node->type == DISPLAY_INTERFACE_YPbPr || node->type == DISPLAY_INTERFACE_TV) {
@@ -758,8 +758,8 @@ int DisplayManager::readConfig(void) {
 				node->connect = 1;
 			else
 				node->connect = 0;
-		}			
-			
+		}
+
 		if(node->connect && *enabled == 0) {
 			node->enable = 1;
 			*enabled = 1;
@@ -772,8 +772,8 @@ int DisplayManager::readConfig(void) {
 //		ALOGD("auto switch not enabled\n");
 		#endif
 		ptr = ptr_space + 1;
-		
-		// Parse iface display mode. 
+
+		// Parse iface display mode.
 		if(memcmp(ptr, "mode=", 5)) {
 			ALOGE("mode error");
 			rc = -1;
@@ -788,18 +788,18 @@ int DisplayManager::readConfig(void) {
 		if((hdmi_mode!=NULL) && (node->type == DISPLAY_INTERFACE_HDMI)){
 		        memset(node->mode, 0, MODE_LENGTH);
 			memcpy(node->mode, hdmi_mode, MODE_LENGTH);
-                       // ALOGD("[%s] iface %d basemode %s\n mode %s\n", __FUNCTION__,node->type,value,node->mode);	
+                       // ALOGD("[%s] iface %d basemode %s\n mode %s\n", __FUNCTION__,node->type,value,node->mode);
 		}
 		else if((tve_mode!=NULL) && (node->type == DISPLAY_INTERFACE_TV)){
 		        memset(node->mode, 0, MODE_LENGTH);
 			memcpy(node->mode, tve_mode, MODE_LENGTH);
-                       // ALOGD("[%s] iface %d basemode %s\n mode %s\n", __FUNCTION__,node->type,value,node->mode);	
+                       // ALOGD("[%s] iface %d basemode %s\n mode %s\n", __FUNCTION__,node->type,value,node->mode);
 		}
 		else if(ptr_space > ptr) {
 			memset(node->mode, 0, MODE_LENGTH);
 			memcpy(node->mode, ptr, ptr_space - ptr);
 		}
-		ALOGD("[%s] display %d iface %d connect %d enable %d mode %s\n", __FUNCTION__, 
+		ALOGD("[%s] display %d iface %d connect %d enable %d mode %s\n", __FUNCTION__,
 			node->property, node->type, node->connect, node->enable, node->mode);
 	}
 	fclose(fd);
@@ -810,12 +810,12 @@ int DisplayManager::readConfig(void) {
 void DisplayManager::getIfaceInfo(SocketClient *cli, int display)
 {
 	struct displaynode *head, *node;
-	
+
 	if(display == MAIN_DISPLAY)
 		head = main_display_list;
 	else
 		head = aux_display_list;
-	
+
 	if(head == NULL) {
 		cli->sendMsg(ResponseCode::OperationFailed, "Missing display node", false);
 	}
@@ -823,20 +823,20 @@ void DisplayManager::getIfaceInfo(SocketClient *cli, int display)
 		for(node = head; node != NULL; node = node->next)
 			cli->sendMsg(ResponseCode::InterfaceListResult, type2string(node->type), false);
 		cli->sendMsg(ResponseCode::CommandOkay, "Interface list completed", false);
-	}		
+	}
 }
 
 void DisplayManager::getCurIface(SocketClient *cli, int display) {
 
 	struct displaynode *head, *node;
-	
+
 	if(display == MAIN_DISPLAY)
 		head = main_display_list;
 	else
 		head = aux_display_list;
-	
+
 	for(node = head; node != NULL; node = node->next)
-	{		
+	{
 		readIfaceConnect(node);
 		if(node->enable == 1 && node->connect == 1) {
 			cli->sendMsg(ResponseCode::CommandOkay, type2string(node->type), false);
@@ -849,12 +849,12 @@ void DisplayManager::getCurIface(SocketClient *cli, int display) {
 int DisplayManager::enableIface(int display, char* iface, int enable) {
 	struct displaynode *head, *node;
 	int type = string2type(iface);
-	
+
 	if(!powerup)
 		return -1;
-	
+
 	ALOGD("[%s] display %d iface %s enable %d", __FUNCTION__, display, iface, enable);
-	
+
 	if(display == MAIN_DISPLAY)
 		head = main_display_list;
 	else
@@ -866,7 +866,7 @@ int DisplayManager::enableIface(int display, char* iface, int enable) {
 		{
 			node->enable = enable;
 			operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
-			if(node->enable == 1)	saveConfig();
+			//if(node->enable == 1)	saveConfig();
 			break;
 		}
 	}
@@ -878,7 +878,7 @@ void DisplayManager::getModeList(SocketClient *cli, int display, char* iface) {
 	char buf[BUFFER_LENGTH];
 	struct displaynode *head, *node;
 	int type = string2type(iface);
-	
+
 	if(display == MAIN_DISPLAY)
 		head = main_display_list;
 	else
@@ -889,12 +889,12 @@ void DisplayManager::getModeList(SocketClient *cli, int display, char* iface) {
 		if(node->type == type)
 			break;
 	}
-	
+
 	if(node == NULL) {
 		cli->sendMsg(ResponseCode::CommandParameterError, "Missing iface", false);
 		return;
 	}
-	
+
 	// Read modelist;
 	memset(buf, 0, BUFFER_LENGTH);
 	strcpy(buf, node->path);
@@ -910,7 +910,7 @@ void DisplayManager::getModeList(SocketClient *cli, int display, char* iface) {
 			cli->sendMsg(ResponseCode::ModeListResult, buf, false);
 		}
 		memset(buf, 0, BUFFER_LENGTH);
-	}		
+	}
 	fclose(fd);
 	cli->sendMsg(ResponseCode::CommandOkay, "Mode list completed", false);
 }
@@ -918,7 +918,7 @@ void DisplayManager::getModeList(SocketClient *cli, int display, char* iface) {
 void DisplayManager::getCurMode(SocketClient *cli, int display, char* iface) {
 	struct displaynode *head, *node;
 	int type = string2type(iface);
-	
+
 	if(display == MAIN_DISPLAY)
 		head = main_display_list;
 	else
@@ -928,39 +928,39 @@ void DisplayManager::getCurMode(SocketClient *cli, int display, char* iface) {
 		if(node->type == type)
 			break;
 	}
-	
+
 	if(node == NULL) {
 		cli->sendMsg(ResponseCode::CommandParameterError, "Missing iface", false);
 		return;
 	}
-	
+
 	if(!strlen(node->mode)) {
 		operateIfaceMode(node, DISPLAY_OPERATE_READ, node->mode);
 	}
 	cli->sendMsg(ResponseCode::CommandOkay, node->mode, false);
-		
+
 	return;
 }
 
 int DisplayManager::setMode(int display, char* iface, char *mode) {
 	struct displaynode *head, *node;
 	int type = string2type(iface);
-	
+
 	if(display == MAIN_DISPLAY)
 		head = main_display_list;
 	else
 		head = aux_display_list;
-	
+
 	ALOGD("[%s] display %d iface %s mode %s", __FUNCTION__, display, iface, mode);
-	
+
 	for(node = head; node != NULL; node = node->next) {
 		if(node->type == type)
 			break;
 	}
-	
+
 	if(node == NULL)
 		return -1;
-	
+
 	operateIfaceMode(node, DISPLAY_OPERATE_WRITE, mode);
 
 	return 0;
@@ -969,17 +969,17 @@ int DisplayManager::setMode(int display, char* iface, char *mode) {
 void DisplayManager::setHDMIEnable(int display) {
 	struct displaynode *head, *node, *iface_hdmi = NULL, *iface_enabled = NULL;
 	int enable, count = 0;
-	
+
 	if(!powerup)
 		return;
-	
+
 	ALOGD("[%s] display %d", __FUNCTION__, display);
-	
+
 	if(display == MAIN_DISPLAY)
 		head = main_display_list;
 	else
 		head = aux_display_list;
-	
+
 	for(node = head; node != NULL; node = node->next) {
 		if(node->type == DISPLAY_INTERFACE_HDMI) {
 			iface_hdmi = node;
@@ -1017,17 +1017,17 @@ void DisplayManager::setHDMIDisable(int display) {
 	int count = 0;
 	int i = 0;
 	int connect = 0;
-	
+
 	if(!powerup)
 		return;
-	
+
 	ALOGD("[%s] display %d", __FUNCTION__, display);
-	
+
 	if(display == MAIN_DISPLAY)
 		head = main_display_list;
 	else
 		head = aux_display_list;
-	
+
 	for(node = head; node != NULL; node = node->next) {
 		if(node->type == DISPLAY_INTERFACE_HDMI) {
 			iface_hdmi = node;
@@ -1042,7 +1042,7 @@ void DisplayManager::setHDMIDisable(int display) {
 
 	//Theres is only one interface in input screen, no need to auto switch.
 	if(count == 1) return;
-	
+
 	for(i=0; i<30; i++)
 	{
 		usleep(10000);
@@ -1050,11 +1050,11 @@ void DisplayManager::setHDMIDisable(int display) {
 		if(connect == 1)
 			return;
 	}
-		
+
 	if(iface_hdmi == iface_enabled && iface_hdmi != NULL) {
 		if(ENABLE_AUTO_SWITCH) {
 //			iface_hdmi->enable = 0;
-//			operateIfaceEnable(iface_hdmi, DISPLAY_OPERATE_WRITE);			
+//			operateIfaceEnable(iface_hdmi, DISPLAY_OPERATE_WRITE);
 //			for(i=0; i<100; i++)
 //			{
 //				usleep(10000);
@@ -1062,7 +1062,7 @@ void DisplayManager::setHDMIDisable(int display) {
 //				if(iface_hdmi->enable == 0)
 //				break;
 //			}
-			
+
 			for(node = head; node != NULL; node = node->next) {
 				readIfaceConnect(node);
 				if(node->connect && node->enable == 0) {
@@ -1078,12 +1078,12 @@ void DisplayManager::setHDMIDisable(int display) {
 void DisplayManager::selectNextIface(int display) {
 	struct displaynode *head, *node, *iface_enabled = NULL, *iface_next = NULL;
 	int enable;
-	
+
 	if(display == MAIN_DISPLAY)
 		head = main_display_list;
 	else
 		head = aux_display_list;
-	
+
 	for(node = head; node != NULL; node = node->next) {
 		if(node->enable == 1) {
 			iface_enabled = node;
@@ -1097,7 +1097,7 @@ void DisplayManager::selectNextIface(int display) {
 		iface_next = head;
 	else
 		iface_next = node->next;
-	
+
 	// Disable current interface.
 	if(iface_enabled != NULL) {
 		iface_enabled->enable = 0;
@@ -1122,7 +1122,7 @@ void DisplayManager::switchFramebuffer(int display, int xres, int yres)
 		ALOGE("%s open fb %s failed", __FUNCTION__, name);
 		return;
 	}
-	
+
 	struct fb_var_screeninfo info;
 	if (ioctl(fd, FBIOGET_VSCREENINFO, &info) == -1)
 	{
@@ -1136,7 +1136,7 @@ void DisplayManager::switchFramebuffer(int display, int xres, int yres)
 	if (ioctl(fd, FBIOPUT_VSCREENINFO, &info) == -1) {
 		ALOGE("%s %s set fb_var_screeninfo failed", __FUNCTION__, name);
 	}
-	
+
 	close(fd);
 }
 
@@ -1147,12 +1147,12 @@ void DisplayManager::get3DModes(SocketClient *cli, int display, char* iface)
 	struct displaynode *head, *node;
 	int type = string2type(iface);
 	char *mode;
-	
+
 	if(type != DISPLAY_INTERFACE_HDMI) {
 		cli->sendMsg(ResponseCode::CommandParameterError, "Wrong HDMI iface", false);
 		return;
 	}
-	
+
 	if(display == MAIN_DISPLAY)
 		head = main_display_list;
 	else
@@ -1163,12 +1163,12 @@ void DisplayManager::get3DModes(SocketClient *cli, int display, char* iface)
 		if(node->type == type)
 			break;
 	}
-	
+
 	if(node == NULL) {
 		cli->sendMsg(ResponseCode::CommandParameterError, "Missing iface", false);
 		return;
 	}
-	
+
 	// Read 3d modes;
 	memset(buf, 0, BUFFER_LENGTH);
 	strcpy(buf, node->path);
@@ -1196,12 +1196,12 @@ void DisplayManager::get3DMode(SocketClient *cli, int display, char* iface)
 	struct displaynode *head, *node;
 	int type = string2type(iface);
 	char *mode;
-	
+
 	if(type != DISPLAY_INTERFACE_HDMI) {
 		cli->sendMsg(ResponseCode::CommandParameterError, "Wrong HDMI iface", false);
 		return;
 	}
-	
+
 	if(display == MAIN_DISPLAY)
 		head = main_display_list;
 	else
@@ -1212,12 +1212,12 @@ void DisplayManager::get3DMode(SocketClient *cli, int display, char* iface)
 		if(node->type == type)
 			break;
 	}
-	
+
 	if(node == NULL) {
 		cli->sendMsg(ResponseCode::CommandParameterError, "Missing iface", false);
 		return;
 	}
-	
+
 	// Read 3d modes;
 	memset(buf, 0, BUFFER_LENGTH);
 	strcpy(buf, node->path);
@@ -1247,11 +1247,11 @@ int	DisplayManager::set3DMode(int display, char* iface, char* mode)
 	char buf[BUFFER_LENGTH];
 	struct displaynode *head, *node;
 	int type = string2type(iface);
-	
+
 	if(type != DISPLAY_INTERFACE_HDMI) {
 		return -1;
 	}
-	
+
 	if(display == MAIN_DISPLAY)
 		head = main_display_list;
 	else
@@ -1262,11 +1262,11 @@ int	DisplayManager::set3DMode(int display, char* iface, char* mode)
 		if(node->type == type)
 			break;
 	}
-	
+
 	if(node == NULL) {
 		return -1;
 	}
-	
+
 	memset(buf, 0, BUFFER_LENGTH);
 	strcpy(buf, node->path);
 	strcat(buf, "/3dmode");

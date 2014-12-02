@@ -44,13 +44,13 @@ class DisplayManager {
 		void	get3DModes(SocketClient *cli, int display, char* iface);
 		void	get3DMode(SocketClient *cli, int display, char* iface);
 		int		set3DMode(int display, char* iface, char *mode);
+		void 	saveConfig(void);
 	private:
 		struct displaynode *main_display_list;
 		struct displaynode *aux_display_list;
 		int		powerup;
 		int 	readConfig(void);
                 char*   readUbootConfig(char *hdmi_mode, char *tve_mode);
-		void 	saveConfig(void);
 		int 	readSysfs(void);
 		int 	operateIfaceEnable(struct displaynode *node, int operate);
 		int		readIfaceConnect(struct displaynode *node);

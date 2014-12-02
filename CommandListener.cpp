@@ -89,11 +89,11 @@ int CommandListener::ModeCmd::runCommand(SocketClient *cli, int argc, char **arg
     }
 	ALOGD(":ModeCmd::runCommand argv[1] = %s",argv[1]);
     if(!strcmp(argv[1], "list")) {
-    	mDisplayManager->getModeList(cli, atoi(argv[2]), argv[3]);   	
+	mDisplayManager->getModeList(cli, atoi(argv[2]), argv[3]);
     } else if(!strcmp(argv[1], "get")) {
     	mDisplayManager->getCurMode(cli, atoi(argv[2]), argv[3]);
-    } else if(!strcmp(argv[1], "set")) {   	
-    	mDisplayManager->setMode(atoi(argv[2]), argv[3], argv[4]);		
+    } else if(!strcmp(argv[1], "set")) {
+	mDisplayManager->setMode(atoi(argv[2]), argv[3], argv[4]);
 		cli->sendMsg(ResponseCode::CommandOkay, "Mode set completed", false);
     } else if(!strcmp(argv[1], "get3dmodes")) {
     	mDisplayManager->get3DModes(cli, atoi(argv[2]), argv[3]);
@@ -121,8 +121,8 @@ int CommandListener::UtilsCmd::runCommand(SocketClient *cli, int argc, char **ar
         cli->sendMsg(ResponseCode::CommandSyntaxError, "Missing argument", false);
         return 0;
     }
-    if (!strcmp(argv[1], "switch")) {    	
-    	#if ENABLE_SWITCH_FRAMEBUFFER 	
+    if (!strcmp(argv[1], "switch")) {
+	#if ENABLE_SWITCH_FRAMEBUFFER
     	cli->sendMsg(ResponseCode::CommandOkay, "true", false);
     	#else
     	cli->sendMsg(ResponseCode::CommandOkay, "false", false);
@@ -140,41 +140,48 @@ int CommandListener::UtilsCmd::runCommand(SocketClient *cli, int argc, char **ar
 			cli->sendMsg(ResponseCode::CommandOkay, "Screen scale set ok", false);
 		}
 	} else if(!strcmp(argv[1], "switchfb")) {
-		if(argc != 5) 
+		if(argc != 5)
 			cli->sendMsg(ResponseCode::CommandSyntaxError, "Missing argument", false);
 		else {
 			mDisplayManager->switchFramebuffer(atoi(argv[2]),atoi(argv[3]), atoi(argv[4]));
 			cli->sendMsg(ResponseCode::CommandOkay, "switch fb ok", false);
 		}
 	}else if(!strcmp(argv[1], "brightness")){
-		if(argc != 5) 
+		if(argc != 5)
 			cli->sendMsg(ResponseCode::CommandSyntaxError, "Missing argument", false);
 		else {
 			mBcshManger->setBrightness(atoi(argv[2]),atoi(argv[3]));
 			cli->sendMsg(ResponseCode::CommandOkay, "set brightness ok", false);
 		}
 	}else if(!strcmp(argv[1], "contrast")){
-		if(argc != 5) 
+		if(argc != 5)
 			cli->sendMsg(ResponseCode::CommandSyntaxError, "Missing argument", false);
 		else {
 			mBcshManger->setContrast(atoi(argv[2]),atoi(argv[3]));
 			cli->sendMsg(ResponseCode::CommandOkay, "set contrast ok", false);
 		}
 	}else if(!strcmp(argv[1], "sat_con")){
-		if(argc != 5) 
+		if(argc != 5)
 			cli->sendMsg(ResponseCode::CommandSyntaxError, "Missing argument", false);
 		else {
 			mBcshManger->setSat_con(atoi(argv[2]),atoi(argv[3]));
 			cli->sendMsg(ResponseCode::CommandOkay, "set sta_con ok", false);
 		}
 	}else if(!strcmp(argv[1], "hue")){
-		if(argc != 5) 
+		if(argc != 5)
 			cli->sendMsg(ResponseCode::CommandSyntaxError, "Missing argument", false);
 		else {
 			mBcshManger->setHue(atoi(argv[2]),atoi(argv[3]),atoi(argv[4]));
 			cli->sendMsg(ResponseCode::CommandOkay, "set hue ok", false);
 		}
-	}    
+	}else if(!strcmp(argv[1], "save")){
+		if(argc != 2)
+			cli->sendMsg(ResponseCode::CommandSyntaxError, "Missing argument", false);
+		else {
+			CommandListener::mDisplayManager->saveConfig();
+			cli->sendMsg(ResponseCode::CommandOkay, "set save ok", false);
+		}
+	}
 	else
 		cli->sendMsg(ResponseCode::CommandSyntaxError, "Unkown command", false);
 	return 0;
