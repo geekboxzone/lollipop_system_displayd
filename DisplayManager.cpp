@@ -993,7 +993,7 @@ void DisplayManager::setHDMIEnable(int display) {
 	if (count == 1)
 		return;
 	readIfaceConnect(iface_hdmi);
-	if(iface_hdmi == iface_enabled && iface_hdmi != NULL) {
+	if((iface_hdmi == iface_enabled || iface_enabled == NULL)) && iface_hdmi != NULL) {
 		operateIfaceMode(iface_hdmi, DISPLAY_OPERATE_WRITE, iface_hdmi->mode);
 		iface_hdmi->enable = 1;
 		operateIfaceEnable(iface_hdmi, DISPLAY_OPERATE_WRITE);
