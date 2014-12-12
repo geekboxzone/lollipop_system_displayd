@@ -579,6 +579,12 @@ void DisplayManager::saveConfig(void) {
 				}else if(strchr(node->mode, 'i')){
 					sscanf(node->mode, "%dx%di-%d", &base_paramer.hdmi.xres, &base_paramer.hdmi.yres, &base_paramer.hdmi.refresh);
 					base_paramer.hdmi.interlaced = 1;
+				}else if(strcmp(node->mode,"auto") == 0){
+					base_paramer.hdmi.xres = 0;
+					base_paramer.hdmi.yres = 0;
+					base_paramer.hdmi.refresh = 0;
+					sscanf(node->mode, "%dx%di-%d", &base_paramer.hdmi.xres, &base_paramer.hdmi.yres, &base_paramer.hdmi.refresh);
+					base_paramer.hdmi.interlaced = 0;
 				}
 				ALOGD("[%s] hdmi_mode %s\n", __FUNCTION__,node->mode);
 			}
