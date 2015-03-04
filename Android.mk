@@ -24,7 +24,7 @@ LOCAL_SRC_FILES:=                       \
 
 LOCAL_MODULE:= displayd
 LOCAL_MODULE_TAGS := optional
-LOCAL_C_INCLUDES := $(KERNEL_HEADERS) \
+LOCAL_C_INCLUDES := \
                     external/openssl/include
 
 LOCAL_SHARED_LIBRARIES := libsysutils libcutils libnetutils libcrypto
@@ -39,7 +39,7 @@ LOCAL_SRC_FILES:=		\
 
 LOCAL_MODULE:= ddc
 LOCAL_MODULE_TAGS := optional
-LOCAL_C_INCLUDES := $(KERNEL_HEADERS)
+#LOCAL_C_INCLUDES := $(KERNEL_HEADERS)
 
 LOCAL_CFLAGS := 
 
