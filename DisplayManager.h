@@ -50,7 +50,7 @@ class DisplayManager {
 		struct displaynode *aux_display_list;
 		int		powerup;
 		int 	readConfig(void);
-                char*   readUbootConfig(char *hdmi_mode, char *tve_mode);
+        int   	readUbootConfig(char *hdmi_mode, char *tve_mode);
 		int 	readSysfs(void);
 		int 	operateIfaceEnable(struct displaynode *node, int operate);
 		int		readIfaceConnect(struct displaynode *node);

@@ -622,7 +622,7 @@ void DisplayManager::saveConfig(void) {
 	sync();
 }
 
-char* DisplayManager::readUbootConfig(char *hdmi_mode, char *tve_mode)
+int DisplayManager::readUbootConfig(char *hdmi_mode, char *tve_mode)
 {
 	FILE *file = NULL;
 	struct displaynode *node;
@@ -635,7 +635,7 @@ char* DisplayManager::readUbootConfig(char *hdmi_mode, char *tve_mode)
              file = fopen(BASEPARAMER_FILE_EMMC32, "r");
              if(file == NULL ) {
 		ALOGE("%s not exist", BASEPARAMER_FILE_EMMC32);
-		return NULL;
+		return -1;
              }
 	}
 
@@ -650,7 +650,7 @@ char* DisplayManager::readUbootConfig(char *hdmi_mode, char *tve_mode)
 			ALOGE("getBASEPARAMERValue(), BASEPARAME data's length is error");
 			fclose(file);
 			file = NULL;
-			return NULL;
+			return -1;
 		}
 
 		fread((void*)&base_paramer,sizeof(file_base_paramer),1,file);
@@ -790,8 +790,10 @@ int DisplayManager::readConfig(void) {
 		//make sure wether base_parameter be modified!
 		char* hdmi_mode = (char*) malloc(BUFFER_LENGTH);
 		char* tve_mode = (char*) malloc(BUFFER_LENGTH);
-		readUbootConfig(hdmi_mode, tve_mode);
-		if((hdmi_mode!=NULL) && (node->type == DISPLAY_INTERFACE_HDMI)){
+		memset(hdmi_mode, 0, BUFFER_LENGTH);
+		memset(tve_mode, 0, BUFFER_LENGTH);
+		int success = readUbootConfig(hdmi_mode, tve_mode);
+		if(success == 0 && (node->type == DISPLAY_INTERFACE_HDMI)){
 		        memset(node->mode, 0, MODE_LENGTH);
 			memcpy(node->mode, hdmi_mode, MODE_LENGTH);
                        // ALOGD("[%s] iface %d basemode %s\n mode %s\n", __FUNCTION__,node->type,value,node->mode);
@@ -1008,10 +1010,10 @@ void DisplayManager::setHDMIEnable(int display) {
 		if(ENABLE_AUTO_SWITCH && (iface_hdmi->type > iface_enabled->type))
 		{
 			iface_enabled->enable = 0;
-			operateIfaceEnable(iface_enabled, DISPLAY_OPERATE_WRITE);
+//			operateIfaceEnable(iface_enabled, DISPLAY_OPERATE_WRITE);
 //			iface_hdmi->enable = 1;
-//			operateIfaceMode(iface_hdmi, DISPLAY_OPERATE_WRITE, iface_hdmi->mode);
-//			operateIfaceEnable(iface_hdmi, DISPLAY_OPERATE_WRITE);
+			operateIfaceMode(iface_hdmi, DISPLAY_OPERATE_WRITE, iface_hdmi->mode);
+			operateIfaceEnable(iface_hdmi, DISPLAY_OPERATE_WRITE);
 		}
 	}
 	usleep(500000);
