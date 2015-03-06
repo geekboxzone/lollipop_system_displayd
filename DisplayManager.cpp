@@ -112,14 +112,17 @@ void DisplayManager::init() {
 		}
 	}
 	for(node = main_display_list; node != NULL; node = node->next) {
+		operateIfaceMode(node, DISPLAY_OPERATE_WRITE, node->mode);
 		if(node->enable == 1) {
-			operateIfaceMode(node, DISPLAY_OPERATE_WRITE, node->mode);
+		//	operateIfaceMode(node, DISPLAY_OPERATE_WRITE, node->mode);
 			found = 1;
 		}
 		// HDMI device is always enabled
 		if (node->type == DISPLAY_INTERFACE_HDMI)
 			node->enable = 1;
+		#ifndef DISPLAY_POLICY_TABLET
 		operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
+		#endif
 		updatesinkaudioinfo(node);
 	}
 	ALOGD("main display enabled interface found %d", found);
