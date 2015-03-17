@@ -28,11 +28,11 @@
 #define DISPLAY_TYPE_YPbPr	"YPbPr"
 #define DISPLAY_TYPE_TV		"TV"
 
-#define DISPLAY_CONFIG_FILE			"/data/display.cfg"
+#define DISPLAY_CONFIG_FILE			"/cache/display.cfg"
 
 #define CVBS_MODE_PAL	"720x576i-50"
 #define CVBS_MODE_NTSC	"720x480i-60"
-
+#define DISPLAY_POLICY_BOX
 enum {
 	DISPLAY_INTERFACE_TV = 1,
 	DISPLAY_INTERFACE_YPbPr,
@@ -120,7 +120,7 @@ void DisplayManager::init() {
 		// HDMI device is always enabled
 		if (node->type == DISPLAY_INTERFACE_HDMI)
 			node->enable = 1;
-		#ifndef DISPLAY_POLICY_TABLET
+		#ifdef DISPLAY_POLICY_BOX
 		operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
 		#endif
 		updatesinkaudioinfo(node);
@@ -133,7 +133,9 @@ void DisplayManager::init() {
 			if(node->connect) {
 				operateIfaceMode(node, DISPLAY_OPERATE_WRITE, node->mode);
 				node->enable = 1;
+				#ifdef DISPLAY_POLICY_BOX
 				operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
+				#endif
 				updatesinkaudioinfo(node);
 				break;
 			}
@@ -143,7 +145,9 @@ void DisplayManager::init() {
 			ALOGD("main display no interface is connected");
 			operateIfaceMode(main_display_list, DISPLAY_OPERATE_WRITE, main_display_list->mode);
 			main_display_list->enable = 1;
+			#ifdef DISPLAY_POLICY_BOX
 			operateIfaceEnable(main_display_list, DISPLAY_OPERATE_WRITE);
+			#endif
 			updatesinkaudioinfo(main_display_list);
 		}
 

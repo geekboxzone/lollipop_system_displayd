@@ -27,8 +27,8 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_C_INCLUDES := \
                     external/openssl/include
 
-ifeq ($(strip $(TARGET_BOARD_PLATFORM_TABLET)), true)
-	LOCAL_CFLAGS += -DDISPLAY_POLICY_TABLET
+ifeq ($(strip $(TARGET_BOARD_PLATFORM_TABLET)), box)
+	LOCAL_CFLAGS += -DDISPLAY_POLICY_BOX
 endif
 
 LOCAL_SHARED_LIBRARIES := libsysutils libcutils libnetutils libcrypto
