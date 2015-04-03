@@ -46,6 +46,8 @@ enum {
 	DISPLAY_OPERATE_WRITE
 };
 
+#define HDMI_VIDEO_YUV420	(4 << 8)
+
 DisplayManager::DisplayManager() {
 
 	ALOGD("[%s] VER 3.0", __FUNCTION__);
@@ -513,7 +515,6 @@ struct file_base_paramer
 
 void DisplayManager::saveConfig(void) {
 	FILE *fd = NULL;
-	FILE *file = NULL;
 	struct displaynode *node;
 	char buf[BUFFER_LENGTH];
 	struct file_base_paramer base_paramer;
@@ -536,79 +537,72 @@ void DisplayManager::saveConfig(void) {
 		fflush(fd);
 		fclose(fd);
 	}
-
-	file = fopen(BASEPARAMER_FILE,"rb");
-	if (file == NULL)
-		file = fopen(BASEPARAMER_FILE_NAND,"rb");
-	if (file == NULL)
-		file = fopen(BASEPARAMER_FILE_EMMC32,"rb");
-	if (file == NULL) {
+	sync();
+	
+	int file;
+	file = open(BASEPARAMER_FILE, O_RDWR);
+	if (file < 0)
+		file = open(BASEPARAMER_FILE_NAND, O_RDWR);
+	if (file < 0)
+		file = open(BASEPARAMER_FILE_EMMC32, O_RDWR);
+	if (file < 0) {
 		ALOGW("base paramter file can not be opened");
 		return;
 	}
 	// caculate file's size and read it
-	fseek(file,0L,SEEK_END);
-	int length = ftell(file);
-	fseek(file,0L,SEEK_SET);
-	if(length < sizeof(base_paramer))
-	{
+	unsigned int length = lseek(file, 0L, SEEK_END);
+	lseek(file, 0L, SEEK_SET);
+	if(length < sizeof(base_paramer)) {
 		ALOGE("BASEPARAME data's length is error\n");
-		fclose(file);
-		file = NULL;
+		close(file);
 		return;
 	}
 
-	fread((void*)&base_paramer,sizeof(file_base_paramer),1,file);
+	read(file, (void*)&base_paramer, sizeof(file_base_paramer));
 
-	fclose(file);
-	file = NULL;
-
-	file = fopen(BASEPARAMER_FILE,"wb");
-	if(file==NULL){
-	file = fopen(BASEPARAMER_FILE_NAND,"wb");
-	}
-	if(file==NULL){
-	file = fopen(BASEPARAMER_FILE_EMMC32,"wb");
-	}
-
-	if(file != NULL)
-	{
-	for(node = main_display_list; node != NULL; node = node->next)
-	{
-		if(node->type == DISPLAY_INTERFACE_HDMI)
-		{
-			if(node->mode)
-			{
+	for(node = main_display_list; node != NULL; node = node->next) {
+		if(node->type == DISPLAY_INTERFACE_HDMI) {
+			if(node->mode) {
 				base_paramer.hdmi.type = node->type;
-				if(strchr(node->mode, 'p')){
-					sscanf(node->mode, "%dx%dp-%d", &base_paramer.hdmi.xres, &base_paramer.hdmi.yres, &base_paramer.hdmi.refresh);
-					base_paramer.hdmi.interlaced = 0;
-				}else if(strchr(node->mode, 'i')){
-					sscanf(node->mode, "%dx%di-%d", &base_paramer.hdmi.xres, &base_paramer.hdmi.yres, &base_paramer.hdmi.refresh);
-					base_paramer.hdmi.interlaced = 1;
-				}else if(strcmp(node->mode,"auto") == 0){
+				base_paramer.hdmi.interlaced = 0;
+
+				if (strstr(node->mode, "YCbCr420"))
+					base_paramer.hdmi.interlaced |= HDMI_VIDEO_YUV420;
+
+				if (strchr(node->mode, 'p')) {
+					sscanf(node->mode, "%dx%dp-%d",
+					       &base_paramer.hdmi.xres,
+					       &base_paramer.hdmi.yres,
+					       &base_paramer.hdmi.refresh);
+				} else if (strchr(node->mode, 'i')) {
+					sscanf(node->mode, "%dx%di-%d",
+					       &base_paramer.hdmi.xres,
+					       &base_paramer.hdmi.yres,
+					       &base_paramer.hdmi.refresh);
+					base_paramer.hdmi.interlaced |= 1;
+				} else if (strcmp(node->mode,"auto") == 0) {
 					base_paramer.hdmi.xres = 0;
 					base_paramer.hdmi.yres = 0;
 					base_paramer.hdmi.refresh = 0;
-					sscanf(node->mode, "%dx%di-%d", &base_paramer.hdmi.xres, &base_paramer.hdmi.yres, &base_paramer.hdmi.refresh);
-					base_paramer.hdmi.interlaced = 0;
 				}
 				ALOGD("[%s] hdmi_mode %s\n", __FUNCTION__,node->mode);
 			}
-		}
-		else if(node->type == DISPLAY_INTERFACE_TV)
-		{
+		} else if(node->type == DISPLAY_INTERFACE_TV) {
 			if(node->mode) {
-				sscanf(node->mode, "%dx%di-%d", &base_paramer.tve.xres, &base_paramer.tve.yres, &base_paramer.tve.refresh);
+				sscanf(node->mode, "%dx%di-%d",
+				       &base_paramer.tve.xres,
+				       &base_paramer.tve.yres,
+				       &base_paramer.tve.refresh);
 				base_paramer.tve.interlaced = 1;
 				ALOGD("[%s] tve_mode  %s\n", __FUNCTION__,node->mode);
 			}
 		}
 	}
-
-	fwrite(&base_paramer,sizeof(base_paramer),1,file);
-	fflush(file);
-
+	lseek(file, 0L, SEEK_SET);
+	write(file, (char*)(&base_paramer), sizeof(base_paramer));
+	close(file);
+	sync();
+	
 	ALOGD("[%s] hdmi:%d,%d,%d,%d,%d,%d\n", __FUNCTION__,
 	base_paramer.hdmi.xres,
 	base_paramer.hdmi.yres,
@@ -616,7 +610,7 @@ void DisplayManager::saveConfig(void) {
 	base_paramer.hdmi.type,
 	base_paramer.hdmi.refresh,
 	base_paramer.hdmi.reserve);
-
+	
 	ALOGD("[%s] tve:%d,%d,%d,%d,%d,%d\n", __FUNCTION__,
 	base_paramer.tve.xres,
 	base_paramer.tve.yres,
@@ -624,9 +618,6 @@ void DisplayManager::saveConfig(void) {
 	base_paramer.tve.type,
 	base_paramer.tve.refresh,
 	base_paramer.tve.reserve);
-	fclose(file);
-	}
-	sync();
 }
 
 int DisplayManager::readUbootConfig(char *hdmi_mode, char *tve_mode)
@@ -646,11 +637,10 @@ int DisplayManager::readUbootConfig(char *hdmi_mode, char *tve_mode)
              }
 	}
 
-	if(file != NULL)
-	{
+	if(file != NULL) {
 		// caculate file's size and read it
 		fseek(file,0L,SEEK_END);
-		int length = ftell(file);
+		unsigned int length = ftell(file);
 		fseek(file,0L,SEEK_SET);
 		if(length < sizeof(base_paramer))
 		{
@@ -662,15 +652,21 @@ int DisplayManager::readUbootConfig(char *hdmi_mode, char *tve_mode)
 
 		fread((void*)&base_paramer,sizeof(file_base_paramer),1,file);
 		fclose(file);
-		if(base_paramer.hdmi.interlaced== 0)
-		sprintf(hdmi_mode, "%dx%dp-%d", base_paramer.hdmi.xres, base_paramer.hdmi.yres, base_paramer.hdmi.refresh);
-		else if(base_paramer.hdmi.interlaced== 1)
-		sprintf(hdmi_mode, "%dx%di-%d", base_paramer.hdmi.xres, base_paramer.hdmi.yres, base_paramer.hdmi.refresh);
-
-	sprintf(tve_mode, "%dx%di-%d", base_paramer.tve.xres, base_paramer.tve.yres, base_paramer.tve.refresh);
-        //sprintf(mode, "%dx%dp-%d", base_paramer.hdmi.xres, base_paramer.hdmi.yres, base_paramer.hdmi.refresh);
-        ALOGD("[%s] hdmi_mode %s tv_mode %s\n", __FUNCTION__,hdmi_mode,tve_mode);
-    }
+		if (base_paramer.hdmi.xres &&
+		    base_paramer.hdmi.yres &&
+		    base_paramer.hdmi.refresh) {
+			if(base_paramer.hdmi.interlaced== 0)
+			sprintf(hdmi_mode, "%dx%dp-%d", base_paramer.hdmi.xres, base_paramer.hdmi.yres, base_paramer.hdmi.refresh);
+			else if(base_paramer.hdmi.interlaced== 1)
+			sprintf(hdmi_mode, "%dx%di-%d", base_paramer.hdmi.xres, base_paramer.hdmi.yres, base_paramer.hdmi.refresh);
+		}
+		if (base_paramer.tve.xres &&
+		    base_paramer.tve.yres &&
+		    base_paramer.tve.refresh)
+			sprintf(tve_mode, "%dx%di-%d", base_paramer.tve.xres, base_paramer.tve.yres, base_paramer.tve.refresh);
+        	//sprintf(mode, "%dx%dp-%d", base_paramer.hdmi.xres, base_paramer.hdmi.yres, base_paramer.hdmi.refresh);
+        	ALOGD("[%s] hdmi_mode %s tv_mode %s\n", __FUNCTION__,hdmi_mode,tve_mode);
+        }
 	return 0;
 }
 
@@ -800,12 +796,12 @@ int DisplayManager::readConfig(void) {
 		memset(hdmi_mode, 0, BUFFER_LENGTH);
 		memset(tve_mode, 0, BUFFER_LENGTH);
 		int success = readUbootConfig(hdmi_mode, tve_mode);
-		if(success == 0 && (node->type == DISPLAY_INTERFACE_HDMI)){
+		if(strlen(hdmi_mode) && (node->type == DISPLAY_INTERFACE_HDMI)){
 		        memset(node->mode, 0, MODE_LENGTH);
 			memcpy(node->mode, hdmi_mode, MODE_LENGTH);
                        // ALOGD("[%s] iface %d basemode %s\n mode %s\n", __FUNCTION__,node->type,value,node->mode);
 		}
-		else if((tve_mode!=NULL) && (node->type == DISPLAY_INTERFACE_TV)){
+		else if(strlen(tve_mode) && (node->type == DISPLAY_INTERFACE_TV)) {
 		        memset(node->mode, 0, MODE_LENGTH);
 			memcpy(node->mode, tve_mode, MODE_LENGTH);
                        // ALOGD("[%s] iface %d basemode %s\n mode %s\n", __FUNCTION__,node->type,value,node->mode);
@@ -949,9 +945,9 @@ void DisplayManager::getCurMode(SocketClient *cli, int display, char* iface) {
 		return;
 	}
 
-	if(!strlen(node->mode)) {
-		operateIfaceMode(node, DISPLAY_OPERATE_READ, node->mode);
-	}
+//	if(!strlen(node->mode)) {
+	operateIfaceMode(node, DISPLAY_OPERATE_READ, node->mode);
+//	}
 	cli->sendMsg(ResponseCode::CommandOkay, node->mode, false);
 
 	return;

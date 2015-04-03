@@ -20,6 +20,8 @@
 
 ScreenScaleManager::ScreenScaleManager() {
 	InitSysNode();
+	return;
+
 	char property[PROPERTY_VALUE_MAX];
 
 	int fd = open(MainDisplaySysNode, O_RDWR, 0);
