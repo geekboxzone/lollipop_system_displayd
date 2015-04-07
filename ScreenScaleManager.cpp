@@ -119,22 +119,26 @@ void ScreenScaleManager::SSMCtrl(int display, int direction, int scalevalue) {
 		fd = open(AuxDisplaySysNode, O_RDWR, 0);
 	if(fd < 0) return;
 	
-	if(direction == DISPLAY_OVERSCAN_X) {
+	if (direction == DISPLAY_OVERSCAN_X) {
 		overscan_left = scalevalue;
 		overscan_right = scalevalue;
-	}
-	else if(direction == DISPLAY_OVERSCAN_Y) {
+	} else if (direction == DISPLAY_OVERSCAN_Y) {
+		overscan_top = scalevalue;
+		overscan_bottom = scalevalue;
+	} else if (direction == DISPLAY_OVERSCAN_LEFT) {
+		overscan_left = scalevalue;
+	} else if (direction == DISPLAY_OVERSCAN_RIGHT) {
+		overscan_right = scalevalue;
+	} else if (direction == DISPLAY_OVERSCAN_TOP) {
+		overscan_top = scalevalue;
+	} else if (direction == DISPLAY_OVERSCAN_BOTTOM) {
+		overscan_bottom = scalevalue;
+	} else if (direction == DISPLAY_OVERSCAN_ALL) {
+		overscan_left = scalevalue;
+		overscan_right = scalevalue;
 		overscan_top = scalevalue;
 		overscan_bottom = scalevalue;
 	}
-	else if(direction == DISPLAY_OVERSCAN_LEFT)
-		overscan_left = scalevalue;
-	else if(direction == DISPLAY_OVERSCAN_RIGHT)
-		overscan_right = scalevalue;
-	else if(direction == DISPLAY_OVERSCAN_TOP)
-		overscan_top = scalevalue;
-	else if(direction == DISPLAY_OVERSCAN_BOTTOM)
-		overscan_bottom = scalevalue;
 	
 	memset(property, 0, PROPERTY_VALUE_MAX);
 	sprintf(property, "overscan %d,%d,%d,%d", overscan_left, overscan_top, overscan_right, overscan_bottom);

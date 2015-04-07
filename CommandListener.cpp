@@ -133,7 +133,7 @@ int CommandListener::UtilsCmd::runCommand(SocketClient *cli, int argc, char **ar
 		else {
 			int direction = atoi(argv[3]);
 			int value = atoi(argv[4]);
-			if(direction <= DISPLAY_OVERSCAN_BOTTOM)
+			if(direction <= DISPLAY_OVERSCAN_ALL)
 				mScreenScaleManager->SSMCtrl(atoi(argv[2]), direction, value);
 			else
 				cli->sendMsg(ResponseCode::CommandParameterError, "Unkown direction", false);
