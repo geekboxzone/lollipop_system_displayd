@@ -1013,7 +1013,7 @@ void DisplayManager::setHDMIEnable(int display) {
 		if(ENABLE_AUTO_SWITCH && (iface_hdmi->type > iface_enabled->type))
 		{
 			iface_enabled->enable = 0;
-//			operateIfaceEnable(iface_enabled, DISPLAY_OPERATE_WRITE);
+			operateIfaceEnable(iface_enabled, DISPLAY_OPERATE_WRITE);
 //			iface_hdmi->enable = 1;
 			operateIfaceMode(iface_hdmi, DISPLAY_OPERATE_WRITE, iface_hdmi->mode);
 			operateIfaceEnable(iface_hdmi, DISPLAY_OPERATE_WRITE);
