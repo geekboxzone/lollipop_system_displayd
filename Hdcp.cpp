@@ -30,18 +30,17 @@ typedef struct tagRKNAND_SYS_STORGAE
 
 void rknand_print_hex_data(uint32 * buf,uint32 len)
 {
-    uint32 i,j,count;
-
-    for(i=0;i<len;i+=4)
-    {
-       ALOGD("%08x %08x %08x %08x",buf[i],buf[i+1],buf[i+2],buf[i+3]);
-    } 
+	uint32 i,j,count;
+	
+	for(i=0;i<len;i+=4)
+		ALOGD("%08x %08x %08x %08x",buf[i],buf[i+1],buf[i+2],buf[i+3]);
 }
 
 int hdcp_read_key_from_idb(char **buf)
 {
     uint32 i;
     int ret ;
+	uint8 *data;
     RKNAND_SYS_STORGAE sysData;
     
     ALOGD("hdcp_read_idb start\n");
@@ -57,22 +56,30 @@ int hdcp_read_key_from_idb(char **buf)
     sysData.tag = SN_SECTOR_OP_TAG;
     sysData.len = RKNAND_SYS_STORGAE_DATA_LEN;
     ret = ioctl(sys_fd, RKNAND_GET_SN_SECTOR, &sysData);
-//	rknand_print_hex_data((uint32*)sysData.data,RKNAND_SYS_STORGAE_DATA_LEN);
+	//rknand_print_hex_data((uint32*)sysData.data,RKNAND_SYS_STORGAE_DATA_LEN);
     if(ret){
         ALOGE("get sn error\n");
         return -1;
     }
 
-#if HDCP_KEY_ENCRYPTED
-    // If HDCP key is encrypted, add decryption at here.
-    // Decryption Code:
-    
-#else
-	*buf = (char*) malloc(HDCP_KEY_SIZE);
-	if(*buf) {
-		memcpy(*buf, sysData.data + HDCP_KEY_IDB_OFFSET, HDCP_KEY_SIZE);
+	data = sysData.data + HDCP_KEY_IDB_OFFSET;
+	if (data[0] == 0 &&
+	    data[1] == 0 &&
+	    data[2] == 0 &&
+	    data[3] == 0 &&
+	    data[4] == 0) {
+	    	ALOGE("It is not a valid HDCP Key, We disable HDCP\n");
+	    	return -1;
 	}
-	else {
+	#if HDCP_KEY_ENCRYPTED
+	// If HDCP key is encrypted, add decryption at here.
+	// Decryption Code:
+	
+	#else
+	*buf = (char*) malloc(HDCP_KEY_SIZE + HDCP_SEED_SIZE);
+	if (*buf) {
+		memcpy(*buf, sysData.data + HDCP_KEY_IDB_OFFSET, HDCP_KEY_SIZE + HDCP_SEED_SIZE);
+	} else {
 		ALOGE("malloc error\n");
 		return -1;
 	}
@@ -137,7 +144,7 @@ static int hdcp_read_key(char **buf, int* size)
 		*size = 0;
 	}
 	else
-		*size = HDCP_KEY_SIZE;
+		*size = HDCP_KEY_SIZE + HDCP_SEED_SIZE;
 	#endif
 #endif
 	return 0;

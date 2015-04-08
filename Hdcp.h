@@ -13,14 +13,15 @@
 
 /* HDCP key size */
 #define HDCP_KEY_SIZE	308
-
+/* HDCP seed size*/
+#define HDCP_SEED_SIZE 2
 /* HDCP authentication size */
 #define HDCP_AUTH_RETRY_TIMES	20
 
 //#define HDCP_KEY_READ_FROM_FILE
 
 #define HDCP_KEY_READ_FROM_IDB
-#define HDCP_KEY_IDB_OFFSET		32
+#define HDCP_KEY_IDB_OFFSET		62
 
 // If key is encrypted, set true. default is false.
 #define HDCP_KEY_ENCRYPTED		0
