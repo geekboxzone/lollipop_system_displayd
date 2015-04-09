@@ -20,47 +20,45 @@
 
 ScreenScaleManager::ScreenScaleManager() {
 	InitSysNode();
-	return;
 
 	char property[PROPERTY_VALUE_MAX];
 
 	int fd = open(MainDisplaySysNode, O_RDWR, 0);
 	if(fd > 0) {
-		if (property_get(PROPETY_OVERSCAN_MAIN, property, NULL) > 0) {
-	    	sscanf(property, "overscan %d,%d,%d,%d", &overscan_left, &overscan_top, &overscan_right, &overscan_bottom);
-	    }
-	    if(overscan_left == 0)
-	    	overscan_left = DEFALUT_SCREEN_SCALE;
-	    if(overscan_right == 0)
-	    	overscan_right = DEFALUT_SCREEN_SCALE;
-	    if(overscan_top == 0)
-	    	overscan_top = DEFALUT_SCREEN_SCALE;
-	    if(overscan_bottom == 0)
-	    	overscan_bottom = DEFALUT_SCREEN_SCALE;
+		if (property_get(PROPETY_OVERSCAN_MAIN, property, NULL) > 0)
+			sscanf(property, "overscan %d,%d,%d,%d", &overscan_left, &overscan_top, &overscan_right, &overscan_bottom);
+		if(overscan_left == 0)
+			overscan_left = DEFALUT_SCREEN_SCALE;
+		if(overscan_right == 0)
+			overscan_right = DEFALUT_SCREEN_SCALE;
+		if(overscan_top == 0)
+			overscan_top = DEFALUT_SCREEN_SCALE;
+		if(overscan_bottom == 0)
+			overscan_bottom = DEFALUT_SCREEN_SCALE;
 		
 		memset(property, 0, PROPERTY_VALUE_MAX);
 		sprintf(property, "overscan %d,%d,%d,%d", overscan_left, overscan_top, overscan_right, overscan_bottom);
-		write(fd, property, strlen(property));
-		close(fd);	
+//		write(fd, property, strlen(property));
+//		close(fd);
 		property_set(PROPETY_OVERSCAN_MAIN, property);
 	}
 	fd = open(AuxDisplaySysNode, O_RDWR, 0);
 	if(fd > 0) {
-		if (property_get(PROPETY_OVERSCAN_AUX, property, NULL) > 0) {
-	    	sscanf(property, "overscan %d,%d,%d,%d", &overscan_left, &overscan_top, &overscan_right, &overscan_bottom);
-	    }
-	    if(overscan_left == 0)
-	    	overscan_left = DEFALUT_SCREEN_SCALE;
-	    if(overscan_right == 0)
-	    	overscan_right = DEFALUT_SCREEN_SCALE;
-	    if(overscan_top == 0)
-	    	overscan_top = DEFALUT_SCREEN_SCALE;
-	    if(overscan_bottom == 0)
-	    	overscan_bottom = DEFALUT_SCREEN_SCALE;
+		if (property_get(PROPETY_OVERSCAN_AUX, property, NULL) > 0)
+	    		sscanf(property, "overscan %d,%d,%d,%d", &overscan_left, &overscan_top, &overscan_right, &overscan_bottom);
+
+		if(overscan_left == 0)
+			overscan_left = DEFALUT_SCREEN_SCALE;
+		if(overscan_right == 0)
+			overscan_right = DEFALUT_SCREEN_SCALE;
+		if(overscan_top == 0)
+			overscan_top = DEFALUT_SCREEN_SCALE;
+		if(overscan_bottom == 0)
+			overscan_bottom = DEFALUT_SCREEN_SCALE;
 		memset(property, 0, PROPERTY_VALUE_MAX);
 		sprintf(property, "overscan %d,%d,%d,%d", overscan_left, overscan_top, overscan_right, overscan_bottom);
-		write(fd, property, strlen(property));
-		close(fd);
+//		write(fd, property, strlen(property));
+//		close(fd);
 		property_set(PROPETY_OVERSCAN_AUX, property);
 	}
 }
