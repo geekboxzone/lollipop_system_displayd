@@ -39,7 +39,7 @@ ScreenScaleManager::ScreenScaleManager() {
 		memset(property, 0, PROPERTY_VALUE_MAX);
 		sprintf(property, "overscan %d,%d,%d,%d", overscan_left, overscan_top, overscan_right, overscan_bottom);
 //		write(fd, property, strlen(property));
-//		close(fd);
+		close(fd);
 		property_set(PROPETY_OVERSCAN_MAIN, property);
 	}
 	fd = open(AuxDisplaySysNode, O_RDWR, 0);
@@ -58,7 +58,7 @@ ScreenScaleManager::ScreenScaleManager() {
 		memset(property, 0, PROPERTY_VALUE_MAX);
 		sprintf(property, "overscan %d,%d,%d,%d", overscan_left, overscan_top, overscan_right, overscan_bottom);
 //		write(fd, property, strlen(property));
-//		close(fd);
+		close(fd);
 		property_set(PROPETY_OVERSCAN_AUX, property);
 	}
 }
