@@ -27,7 +27,7 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_C_INCLUDES := \
                     external/openssl/include
 
-ifeq ($(strip $(TARGET_BOARD_PLATFORM_TABLET)), box)
+ifeq ($(strip $(TARGET_BOARD_PLATFORM_PRODUCT)), box)
 	LOCAL_CFLAGS += -DDISPLAY_POLICY_BOX
 endif
 
