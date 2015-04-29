@@ -4,11 +4,15 @@
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
+#include <termio.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <sys/ioctl.h>
-
+#include <sys/utsname.h>
+#include <cutils/misc.h>
 #define LOG_TAG "HDCP"
 
-#include "cutils/log.h"
+#include <cutils/log.h>
 #include "Hdcp.h"
 
 #define RKNAND_GET_SN_SECTOR       _IOW('d', 3, unsigned int) 
@@ -28,6 +32,14 @@ typedef struct tagRKNAND_SYS_STORGAE
     uint8   data[RKNAND_SYS_STORGAE_DATA_LEN];
 }RKNAND_SYS_STORGAE;
 
+#ifdef __cplusplus
+extern "C" {
+#endif 
+extern int init_module(void *, unsigned long, const char *);
+extern int delete_module(const char *, unsigned int);
+#ifdef __cplusplus
+}
+#endif
 void rknand_print_hex_data(uint32 * buf,uint32 len)
 {
 	uint32 i,j,count;
@@ -35,6 +47,8 @@ void rknand_print_hex_data(uint32 * buf,uint32 len)
 	for(i=0;i<len;i+=4)
 		ALOGD("%08x %08x %08x %08x",buf[i],buf[i+1],buf[i+2],buf[i+3]);
 }
+
+static int hdcp_enable = 0;
 
 int hdcp_read_key_from_idb(char **buf)
 {
@@ -58,7 +72,7 @@ int hdcp_read_key_from_idb(char **buf)
     ret = ioctl(sys_fd, RKNAND_GET_SN_SECTOR, &sysData);
 	//rknand_print_hex_data((uint32*)sysData.data,RKNAND_SYS_STORGAE_DATA_LEN);
     if(ret){
-        ALOGE("get sn error\n");
+        ALOGE("get sn error %d\n", errno);
         return -1;
     }
 
@@ -317,10 +331,13 @@ static void hdcp_set_trytimes(int times)
 	fclose(fd);
 }
 
-static void hdcp_enable(void)
+void Hdcp_enable(void)
 {
 	FILE *fd = NULL;
-	
+
+	if (!hdcp_enable)
+		return;
+	ALOGD("%s", __func__);
 	fd = fopen(HDCP_ENABLE, "w");
 	if(fd == NULL)	return;
 		
@@ -328,17 +345,78 @@ static void hdcp_enable(void)
 	fclose(fd);
 }
 
-void Hdcp_init() {
+static int insmod(const char *filename)
+{
+	void *module = NULL;
+	unsigned int size;
+	int ret;
+	struct utsname name;
+	char filename_release[PATH_MAX];
+
+	ALOGD("insmod %s", filename);
+	memset(&name, 0, sizeof(name));
+	ret = uname(&name);
+	if (ret == 0 && name.release) {
+		// try insmod filename.x.x.x 
+		strncat(filename_release, filename, sizeof(filename_release) - 1);
+		strncat(filename_release, ".", sizeof(filename_release) - 1);
+		strncat(filename_release, name.release, sizeof(filename_release) - 1);
+		module = load_file(filename_release, &size);
+	}
+	if (!module)
+		module = load_file(filename, &size);
+	if (!module)
+		return -1;
+	ret = init_module(module, size, "");
+	free(module);
+	return ret;
+}
+
+static int rmmod(const char *modname)
+{
+	int ret = -1;
+	int maxtry = 10;
+
+	while (maxtry-- > 0)
+	{
+		ret = delete_module(modname, O_NONBLOCK | O_EXCL);
+		if (ret < 0 && errno == EAGAIN)
+			usleep(500000);
+		else
+			break;
+	}
+	if (ret != 0)
+		SLOGE("Unable to unload driver module \"%s\": %s\n", modname, strerror(errno));
+	return ret;
+}
+
+static void hdcp2_init(void)
+{
+	ALOGI("HDCP2 starting");
+	if (access(HDCP2_MODULE, R_OK) == 0 &&
+	    access(HDCP2_FW_NAME, R_OK) == 0) {
+	    	if (insmod(HDCP2_MODULE) == 0)
+	    		usleep(150000);
+			rk_hdmi_hdcp2_init(HDCP2_FW_NAME, NULL);
+	}
+}
+
+void Hdcp_init()
+{
 	
 	ALOGI("HDCP starting");
-
+	hdcp_enable = 0;
 	if (access(HDCP_ENABLE, W_OK) == 0) {
 		if( (access(HDCP_FIRMWARE_LOADING, W_OK) == 0) &&
-			(access(HDCP_FIRMWARE_DATA, W_OK) == 0) )
-		{
-			if(hdcp_load_firmware() == 0) {
-				hdcp_set_trytimes(HDCP_AUTH_RETRY_TIMES);
-				hdcp_enable();
+			(access(HDCP_FIRMWARE_DATA, W_OK) == 0) ) {
+			if (access("/drmboot.ko", R_OK) == 0) {
+				insmod("/drmboot.ko");
+				usleep(150000);
+				if(hdcp_load_firmware() == 0) {
+					hdcp_set_trytimes(HDCP_AUTH_RETRY_TIMES);
+					hdcp2_init();
+					hdcp_enable = 1;
+				}
 			}
 		}
 		else

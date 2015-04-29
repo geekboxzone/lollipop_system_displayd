@@ -19,20 +19,25 @@ LOCAL_SRC_FILES:=                       \
                   OtgManager.cpp		\
                   ScreenScaleManager.cpp\
                   Hdcp.cpp \
-				  BcshManager.cpp
+                  BcshManager.cpp
 
 
 LOCAL_MODULE:= displayd
 LOCAL_MODULE_TAGS := optional
 LOCAL_C_INCLUDES := \
                     external/openssl/include
+LOCAL_CFLAGS :=
 
 ifeq ($(strip $(TARGET_BOARD_PLATFORM_PRODUCT)), box)
 	LOCAL_CFLAGS += -DDISPLAY_POLICY_BOX
 endif
 
-LOCAL_SHARED_LIBRARIES := libsysutils libcutils libnetutils libcrypto
+LOCAL_SHARED_LIBRARIES := libcutils libnetutils libcrypto libsysutils
 
+ifeq ($(PRODUCT_HAVE_HDMIHDCP2), true)
+	LOCAL_CFLAGS += -DSUPPORT_HDCP2
+	LOCAL_SHARED_LIBRARIES += librkhdcp2
+endif
 
 include $(BUILD_EXECUTABLE)
 

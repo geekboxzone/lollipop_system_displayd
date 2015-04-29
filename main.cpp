@@ -64,53 +64,52 @@ static void sigchld_handler(int sig);
 
 int main() {
 
-    CommandListener *cl;
-    NetlinkManager *nm;
+	CommandListener *cl;
+	NetlinkManager *nm;
 	DisplayManager *dm;
 #if ENABLE_OTG_MANAGER	
 	OtgManager *om;
 #endif
 	ScreenScaleManager	*ssm;
 		
-    ALOGI("Display damen 2.1 starting");
-
-	Hdcp_init();
+	ALOGI("Display damen 2.1 starting");
 	
-//    signal(SIGCHLD, sigchld_handler);
+	Hdcp_init();
+	//    signal(SIGCHLD, sigchld_handler);
 	ssm = new ScreenScaleManager();	
 	dm = new(DisplayManager);
-    if (!(nm = NetlinkManager::Instance(dm))) {
-        ALOGE("Unable to create NetlinkManager");
-        exit(1);
-    };
+	if (!(nm = NetlinkManager::Instance(dm))) {
+		ALOGE("Unable to create NetlinkManager");
+		exit(1);
+	};
 
-
-    cl = new CommandListener(dm, ssm);
-    nm->setBroadcaster((SocketListener *) cl);
-
-    if (nm->start()) {
-        ALOGE("Unable to start NetlinkManager (%s)", strerror(errno));
-        exit(1);
-    }
+	cl = new CommandListener(dm, ssm);
+	nm->setBroadcaster((SocketListener *) cl);
+	
+	if (nm->start()) {
+		ALOGE("Unable to start NetlinkManager (%s)", strerror(errno));
+		exit(1);
+	}
 #if ENABLE_OTG_MANAGER
 	/* Start otg manager */
 	om = new OtgManager();
 #endif
-    /*
-     * Now that we're up, we can respond to commands
-     */
-    if (cl->startListener()) {
-        ALOGE("Unable to start CommandListener (%s)", strerror(errno));
-        exit(1);
-    }
-
-    // Eventually we'll become the monitoring thread
-    while(1) {
-        sleep(1000);
-    }
-
-    ALOGI("Displayd exiting");
-    exit(0);
+	/*
+	* Now that we're up, we can respond to commands
+	*/
+	if (cl->startListener()) {
+		ALOGE("Unable to start CommandListener (%s)", strerror(errno));
+		exit(1);
+	}
+	sleep(1);
+	Hdcp_enable();
+	// Eventually we'll become the monitoring thread
+	while(1) {
+		sleep(1000);
+	}
+	
+	ALOGI("Displayd exiting");
+	exit(0);
 }
 
 static void do_coldboot(DIR *d, int lvl)

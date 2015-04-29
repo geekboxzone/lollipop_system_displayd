@@ -27,6 +27,7 @@
 #include "NetlinkHandler.h"
 #include "NetlinkManager.h"
 #include "ResponseCode.h"
+#include "Hdcp.h"
 
 NetlinkHandler::NetlinkHandler(NetlinkManager *nm, int listenerSocket,
                                int format) :
@@ -46,32 +47,41 @@ int NetlinkHandler::stop() {
 }
 
 void NetlinkHandler::onEvent(NetlinkEvent *evt) {
-    const char *subsys = evt->getSubsystem();
-    if (!subsys) {
-        ALOGW("No subsystem found in netlink event");
-        return;
-    }
-    
-    if (!strcmp(subsys, "display")) {
-        int action = evt->getAction();
-        if (action == evt->NlActionAdd) {
-            const char *iface = evt->findParam("INTERFACE");
-            const char *screen = evt->findParam("SCREEN");
-            if(iface && screen)
-            	ALOGW("iface id %s screen is %s", iface, screen);
-            notifyInterfaceAdded(iface, screen);
-        } else if (action == evt->NlActionRemove) {
-            const char *iface = evt->findParam("INTERFACE");
-            const char *screen = evt->findParam("SCREEN");
-            if(iface && screen)
-            ALOGW("iface id %s screen is %s", iface, screen);
-            notifyInterfaceRemoved(iface, screen);
-        } else if (action == evt->NlActionChange) {
-//            evt->dump();
-            const char *type = evt->findParam("TRIGGER");
-            notifyInterfaceChanged(type, true);
-        }
-    }
+	const char *subsys = evt->getSubsystem();
+
+	if (!subsys) {
+		ALOGW("No subsystem found in netlink event");
+		return;
+	}
+//	ALOGD("subsys %s", subsys);
+	if (!strcmp(subsys, "display")) {
+		int action = evt->getAction();
+		if (action == evt->NlActionAdd) {
+		    const char *iface = evt->findParam("INTERFACE");
+		    const char *screen = evt->findParam("SCREEN");
+		    if(iface && screen)
+		    	ALOGW("iface id %s screen is %s", iface, screen);
+		    notifyInterfaceAdded(iface, screen);
+		} else if (action == evt->NlActionRemove) {
+		    const char *iface = evt->findParam("INTERFACE");
+		    const char *screen = evt->findParam("SCREEN");
+		    if(iface && screen)
+		    ALOGW("iface id %s screen is %s", iface, screen);
+		    notifyInterfaceRemoved(iface, screen);
+		} else if (action == evt->NlActionChange) {
+	//            evt->dump();
+		    const char *type = evt->findParam("TRIGGER");
+		    notifyInterfaceChanged(type, true);
+		}
+	} else if (!strcmp(subsys, "hdmi_hdcp2")) {
+		evt->dump();
+		int action = evt->getAction();
+		if (action == evt->NlActionChange) {
+			const char *start = evt->findParam("START");
+			if (start)
+				rk_hdmi_hdcp2_start();
+		}
+	}
 }
 
 void NetlinkHandler::notifyInterfaceAdded(const char *name, const char *screen) {
