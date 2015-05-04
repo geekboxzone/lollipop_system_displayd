@@ -129,6 +129,20 @@ static int firmware_loading_disable(void)
 	return 0;
 }
 
+static int firmware_loading_cancel(void)
+{
+	FILE *fd = NULL;
+	
+	fd = fopen(HDCP_FIRMWARE_LOADING, "w");
+	if(fd == NULL)
+		return -1;
+		
+	fputs("-1", fd);
+	fclose(fd);
+	
+	return 0;
+}
+
 static int hdcp_read_key(char **buf, int* size)
 {
 #ifdef HDCP_KEY_READ_FROM_FILE
@@ -412,12 +426,14 @@ void Hdcp_init()
 			if (access("/drmboot.ko", R_OK) == 0) {
 				insmod("/drmboot.ko");
 				usleep(150000);
-				if(hdcp_load_firmware() == 0) {
+				if (hdcp_load_firmware() == 0) {
 					hdcp_set_trytimes(HDCP_AUTH_RETRY_TIMES);
 					hdcp2_init();
 					hdcp_enable = 1;
-				}
-			}
+				} else
+					firmware_loading_cancel();
+			} else
+				firmware_loading_cancel();
 		}
 		else
 			ALOGW("Device not support load HDCP firmware, just exit.\n");
