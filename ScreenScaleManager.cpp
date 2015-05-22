@@ -69,7 +69,7 @@ void ScreenScaleManager::InitSysNode(void) {
 	
 	char const * const device_template = "/sys/class/graphics/fb%u/lcdcid";
 	FILE *fd = NULL;
-	int i = 0, id = 0;
+	int i = 0, id = 0, id_fb0 = -1;
 	char name[64];
 	
 	do
@@ -83,10 +83,12 @@ void ScreenScaleManager::InitSysNode(void) {
 			fgets(name, 64, fd);
 			fclose(fd);
 			id = atoi(name);
-			if(id == 0 && strlen(MainDisplaySysNode) == 0) {
+			if (id_fb0 < 0)
+				id_fb0 = id;
+			if(id == id_fb0 && strlen(MainDisplaySysNode) == 0) {
 				snprintf(MainDisplaySysNode, 64, "/sys/class/graphics/fb%u/scale", i);
 			}
-			else if(id == 1 && strlen(AuxDisplaySysNode) == 0) {
+			else if(id != id_fb0 && strlen(AuxDisplaySysNode) == 0) {
 				snprintf(AuxDisplaySysNode, 64, "/sys/class/graphics/fb%u/scale", i);
 			}
 		}
