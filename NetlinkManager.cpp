@@ -69,13 +69,13 @@ NetlinkHandler *NetlinkManager::setupSocket(int *sock, int netlinkFamily,
         ALOGE("Unable to create netlink socket: %s", strerror(errno));
         return NULL;
     }
-
+/*
     if (setsockopt(*sock, SOL_SOCKET, SO_RCVBUFFORCE, &sz, sizeof(sz)) < 0) {
         ALOGE("Unable to set uevent socket SO_RCVBUFFORCE option: %s", strerror(errno));
         close(*sock);
         return NULL;
     }
-
+*/
     if (setsockopt(*sock, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on)) < 0) {
         SLOGE("Unable to set uevent socket SO_PASSCRED option: %s", strerror(errno));
         close(*sock);
