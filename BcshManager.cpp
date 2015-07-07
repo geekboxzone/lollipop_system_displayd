@@ -35,169 +35,169 @@ BcshManger::BcshManger()
 	strcpy(buf, BCSH_SYSFS_NODE);
 	char tmp[16] = "open";
 	fd = fopen(buf, "wb");
-	if(fd != NULL)
-	{
-		fwrite(tmp,strlen(tmp), 1,fd);
+	if(fd != NULL) {
+		fwrite(tmp, strlen(tmp), 1, fd);
 		fclose(fd);
 	}
 	init();
 
 }
+
 void BcshManger::init()
 {
 	char property[PROPERTY_VALUE_MAX];
-	char tmp[128];
-	memset(property,0,PROPERTY_VALUE_MAX);
-	memset(tmp,0,128);
-	FILE *fd = NULL;
-	char buf[BUFFER_LENGTH];
-	memset(buf, 0, BUFFER_LENGTH);
-	strcpy(buf, BCSH_SYSFS_NODE);
 	
-    if(property_get("persist.sys.bcsh.brightness", property, 0) > 0){
-		sprintf(tmp,"brightness %d",atoi(property));
-		
-		fd = fopen(buf, "wb");
-		if(fd != NULL)
-		{
-			fwrite(tmp,strlen(tmp), 1,fd);
-			fclose(fd);
-		}
-    }
-	memset(tmp,0,128);
-	memset(property,0,PROPERTY_VALUE_MAX);
-	if(property_get("persist.sys.bcsh.contrast", property, 0) > 0){
-		sprintf(tmp,"contrast %d",atoi(property));
-		fd = fopen(buf, "wb");
-		if(fd != NULL)
-		{
-			fwrite(tmp,strlen(tmp), 1,fd);
-			fclose(fd);
-		}
-	}
+	mBrightness = 0;
+	mContrast = 1;
+	mSaturation = 1;
+	mDegree = 0;
 
-	memset(tmp,0,128);
-	memset(property,0,PROPERTY_VALUE_MAX);
-	if(property_get("persist.sys.bcsh.satcon", property, 0)>0){
-		sprintf(tmp,"satcon %d",atoi(property));
-		fd = fopen(buf, "wb");
-		if(fd != NULL)
-		{
-			fwrite(tmp,strlen(tmp), 1,fd);
-			fclose(fd);
-		}
-	}
-	memset(tmp,0,128);
-	memset(property,0,PROPERTY_VALUE_MAX);
-	
-	if(property_get("persist.sys.bcsh.hue", property, 0) > 0){
-		int sin_hue =0;
-		int cos_hue = 0;
-		if(atoi(property) >=0 && atoi(property) <= 30){
-			sin_hue = (int)(sin((float)atoi(property)/10-30)*256) + 0x100;
-			cos_hue = (int)(cos((float)atoi(property)/10-30)*256);
-		}else{
-			sin_hue = (int)(sin((float)atoi(property)/10-30)*256);
-			cos_hue = (int)(cos((float)atoi(property)/10-30)*256);
-		}
-		sprintf(tmp,"hue %d %d",sin_hue,cos_hue);
-		fd = fopen(buf, "wb");
-		if(fd != NULL)
-		{
-			fwrite(tmp,strlen(tmp), 1,fd);
-			fclose(fd);
-		}
-	}
+	memset(property, 0, PROPERTY_VALUE_MAX);
+	if(property_get("persist.sys.bcsh.brightness", property, 0) > 0)
+		setBrightness(0, atoi(property));
+	memset(property, 0, PROPERTY_VALUE_MAX);
+	if(property_get("persist.sys.bcsh.contrast", property, 0) > 0)
+		setContrast(0, atof(property));
+	memset(property, 0, PROPERTY_VALUE_MAX);
+	if(property_get("persist.sys.bcsh.saturation", property, 0) > 0)
+		setSaturation(0, atof(property));
+	memset(property, 0, PROPERTY_VALUE_MAX);	
+	if(property_get("persist.sys.bcsh.hue", property, 0) > 0)
+		setHue(0, atof(property));
 }
+/*
+ * brightness: [-32, 31], default 0
+ */
 int BcshManger::setBrightness(int display,int brightness)
 {
 	FILE *fd = NULL;
 	char buf[BUFFER_LENGTH];
-	char tmp[128];
-	char prop[16];
-	memset(tmp,0,128);
-	
+
+	if (brightness < -32 || brightness > 31)
+		return -1;
+
+	if (brightness == mBrightness)
+		return 0;
+
 	memset(buf, 0, BUFFER_LENGTH);
 	strcpy(buf, BCSH_SYSFS_NODE);
-
-	//strcpy(tmp,BCSH_TYPE_BRIGHT);
-	sprintf(tmp,"brightness %d",brightness);
+	
 	fd = fopen(buf, "wb");
 	if(fd == NULL)
 		return -1;
-
-	fwrite(tmp,strlen(tmp), 1,fd);
+	ALOGD("%s %d %d", __func__, display, brightness);
+	memset(buf, 0, BUFFER_LENGTH);
+	sprintf(buf,"brightness %d",brightness + 128);
+	fwrite(buf, strlen(buf), 1, fd);
 	fclose(fd);
-	sprintf(prop,"%d",brightness);
-	property_set("persist.sys.bcsh.brightness",prop);
+
+	mBrightness = brightness;
+	memset(buf, 0, BUFFER_LENGTH);
+	sprintf(buf,"%d", brightness);
+	property_set("persist.sys.bcsh.brightness",buf);
 	return 0;
 }
 
-int BcshManger::setContrast(int display,int contrast)
+/*
+ * contrast: [0, 1.992], default 1;
+ */
+int BcshManger::setContrast(int display, float contrast)
 {
 	FILE *fd = NULL;
 	char buf[BUFFER_LENGTH];
-	char tmp[128];
-	char prop[16];
-	memset(prop,0,16);
-	memset(tmp,0,128);
-	
+
+	if (contrast < 0 || contrast > 1.992)
+		return -1;
+
+	if (mContrast == contrast)
+		return 0;
+
+	ALOGD("%s %d %f", __func__, display, contrast);
 	memset(buf, 0, BUFFER_LENGTH);
 	strcpy(buf, BCSH_SYSFS_NODE);
 
-	//strcpy(tmp,BCSH_TYPE_BRIGHT);
-	sprintf(tmp,"contrast %d",contrast);
 	fd = fopen(buf, "wb");
 	if(fd == NULL)
 		return -1;
-	fwrite(tmp,strlen(tmp),1, fd);
+	memset(buf, 0, BUFFER_LENGTH);
+	sprintf(buf, "contrast %d", (int)round(contrast * 256));
+	fwrite(buf,strlen(buf),1, fd);
 	fclose(fd);
-	sprintf(prop,"%d",contrast);
-	property_set("persist.sys.bcsh.contrast",prop);
+	mContrast = contrast;
+	memset(buf, 0, BUFFER_LENGTH);
+	sprintf(buf, "%f", contrast);
+	property_set("persist.sys.bcsh.contrast", buf);
+
+	setSaturation(display, mSaturation);
 	return 0;
 }
 
-int BcshManger::setSat_con(int display,int sta)
+/*
+ * saturation: [0, 1.992], default 1;
+ */
+int BcshManger::setSaturation(int display,float saturation)
 {
 	FILE *fd = NULL;
 	char buf[BUFFER_LENGTH];
-	char tmp[128];
-	char prop[16];
-	memset(prop,0,16);
-	memset(tmp,0,128);
-	
+
+	if (saturation < 0 || saturation > 1.992)
+		return -1;
+
+	ALOGD("%s %d %f mContrast %f", __func__, display, saturation, mContrast);
 	memset(buf, 0, BUFFER_LENGTH);
 	strcpy(buf, BCSH_SYSFS_NODE);
-
-	//strcpy(tmp,BCSH_TYPE_BRIGHT);
-	sprintf(tmp,"sat_con %d",sta);
 	fd = fopen(buf, "wb");
 	if(fd == NULL)
 		return -1;
-	fwrite(tmp,strlen(tmp),1, fd);
+	memset(buf, 0, BUFFER_LENGTH);
+	sprintf(buf,"sat_con %d",(int)round(saturation * mContrast * 256));
+	fwrite(buf, strlen(buf), 1, fd);
 	fclose(fd);
-	sprintf(prop,"%d",sta);
-	property_set("persist.sys.bcsh.satcon",prop);
+	if (saturation != mSaturation) {
+		mSaturation = saturation;
+		memset(buf, 0, BUFFER_LENGTH);
+		sprintf(buf,"%f", saturation);
+		property_set("persist.sys.bcsh.saturation",buf);
+	}
 	return 0;
 }
 
-int BcshManger::setHue(int display,int s1,int s2)
+/*
+ * degree: [-30, 30], default 0
+ */
+int BcshManger::setHue(int display, float degree)
 {
 	FILE *fd = NULL;
+	int sin_hue, cos_hue;
 	char buf[BUFFER_LENGTH];
-	char tmp[128];
-	memset(tmp,0,128);
 	
+	if (degree < -30 || degree > 30)
+		return -1;
+
+	if (degree == mDegree)
+		return 0;
+
+	ALOGD("%s %d %f", __func__, display, degree);
+
 	memset(buf, 0, BUFFER_LENGTH);
 	strcpy(buf, BCSH_SYSFS_NODE);
-
-	//strcpy(tmp,BCSH_TYPE_BRIGHT);
-	sprintf(tmp,"hue %d %d",s1,s2);
 	fd = fopen(buf, "wb");
 	if(fd == NULL)
 		return -1;
-	fwrite(tmp,strlen(tmp),1, fd);
+	if (degree < 0)
+		sin_hue = (int)(sin(degree * 3.1415926 / 180) * 256) + 256;
+	else
+		sin_hue = (int)(sin(degree * 3.1415926 / 180) * 256);
+	cos_hue = (int)(cos(degree * 3.1415926 / 180) * 256);
+	memset(buf, 0, BUFFER_LENGTH);
+	sprintf(buf,"hue %d %d", sin_hue, cos_hue);
+	fwrite(buf,strlen(buf),1, fd);
 	fclose(fd);
+
+	mDegree = degree;
+	memset(buf, 0, BUFFER_LENGTH);
+	sprintf(buf,"%f",degree);
+	property_set("persist.sys.bcsh.hue",buf);
 	return 0;
 }
 

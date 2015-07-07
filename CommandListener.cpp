@@ -118,16 +118,16 @@ int CommandListener::UtilsCmd::runCommand(SocketClient *cli, int argc, char **ar
 	//ALOGD("runCommand argv[1] = %s argv[2] = %s",argv[1],argv[2]);
 	if (argc < 2) {
 		ALOGD("argc = %d",argc);
-        cli->sendMsg(ResponseCode::CommandSyntaxError, "Missing argument", false);
-        return 0;
-    }
-    if (!strcmp(argv[1], "switch")) {
-	#if ENABLE_SWITCH_FRAMEBUFFER
-    	cli->sendMsg(ResponseCode::CommandOkay, "true", false);
-    	#else
-    	cli->sendMsg(ResponseCode::CommandOkay, "false", false);
-    	#endif
-	} else if(!strcmp(argv[1], "scaleset")) {
+        	cli->sendMsg(ResponseCode::CommandSyntaxError, "Missing argument", false);
+        	return 0;
+	}
+	if (!strcmp(argv[1], "switch")) {
+		#if ENABLE_SWITCH_FRAMEBUFFER
+		cli->sendMsg(ResponseCode::CommandOkay, "true", false);
+		#else
+		cli->sendMsg(ResponseCode::CommandOkay, "false", false);
+		#endif
+	} else if (!strcmp(argv[1], "scaleset")) {
 		if(argc != 5)
 			cli->sendMsg(ResponseCode::CommandSyntaxError, "Missing argument", false);
 		else {
@@ -139,42 +139,42 @@ int CommandListener::UtilsCmd::runCommand(SocketClient *cli, int argc, char **ar
 				cli->sendMsg(ResponseCode::CommandParameterError, "Unkown direction", false);
 			cli->sendMsg(ResponseCode::CommandOkay, "Screen scale set ok", false);
 		}
-	} else if(!strcmp(argv[1], "switchfb")) {
+	} else if (!strcmp(argv[1], "switchfb")) {
 		if(argc != 5)
 			cli->sendMsg(ResponseCode::CommandSyntaxError, "Missing argument", false);
 		else {
 			mDisplayManager->switchFramebuffer(atoi(argv[2]),atoi(argv[3]), atoi(argv[4]));
 			cli->sendMsg(ResponseCode::CommandOkay, "switch fb ok", false);
 		}
-	}else if(!strcmp(argv[1], "brightness")){
-		if(argc != 5)
+	} else if (!strcmp(argv[1], "brightness")){
+		if(argc != 4)
 			cli->sendMsg(ResponseCode::CommandSyntaxError, "Missing argument", false);
 		else {
-			mBcshManger->setBrightness(atoi(argv[2]),atoi(argv[3]));
+			mBcshManger->setBrightness(atoi(argv[2]), atoi(argv[3]));
 			cli->sendMsg(ResponseCode::CommandOkay, "set brightness ok", false);
 		}
-	}else if(!strcmp(argv[1], "contrast")){
-		if(argc != 5)
+	} else if (!strcmp(argv[1], "contrast")){
+		if(argc != 4)
 			cli->sendMsg(ResponseCode::CommandSyntaxError, "Missing argument", false);
 		else {
-			mBcshManger->setContrast(atoi(argv[2]),atoi(argv[3]));
+			mBcshManger->setContrast(atoi(argv[2]), atof(argv[3]));
 			cli->sendMsg(ResponseCode::CommandOkay, "set contrast ok", false);
 		}
-	}else if(!strcmp(argv[1], "sat_con")){
-		if(argc != 5)
+	} else if (!strcmp(argv[1], "saturation")){
+		if(argc != 4)
 			cli->sendMsg(ResponseCode::CommandSyntaxError, "Missing argument", false);
 		else {
-			mBcshManger->setSat_con(atoi(argv[2]),atoi(argv[3]));
+			mBcshManger->setSaturation(atoi(argv[2]), atof(argv[3]));
 			cli->sendMsg(ResponseCode::CommandOkay, "set sta_con ok", false);
 		}
-	}else if(!strcmp(argv[1], "hue")){
-		if(argc != 5)
+	} else if (!strcmp(argv[1], "hue")){
+		if(argc != 4)
 			cli->sendMsg(ResponseCode::CommandSyntaxError, "Missing argument", false);
 		else {
-			mBcshManger->setHue(atoi(argv[2]),atoi(argv[3]),atoi(argv[4]));
+			mBcshManger->setHue(atoi(argv[2]), atof(argv[3]));
 			cli->sendMsg(ResponseCode::CommandOkay, "set hue ok", false);
 		}
-	}else if(!strcmp(argv[1], "save")){
+	} else if (!strcmp(argv[1], "save")){
 		if(argc != 2)
 			cli->sendMsg(ResponseCode::CommandSyntaxError, "Missing argument", false);
 		else {
