@@ -121,9 +121,9 @@ void DisplayManager::init() {
 		// HDMI device is always enabled
 		if (node->type == DISPLAY_INTERFACE_HDMI)
 			node->enable = 1;
-		#ifdef DISPLAY_POLICY_BOX
-		operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
-		#endif
+		//#ifdef DISPLAY_POLICY_BOX
+		//operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
+		//#endif
 		updatesinkaudioinfo(node);
 	}
 	ALOGD("main display enabled interface found %d", found);
@@ -152,6 +152,12 @@ void DisplayManager::init() {
 			updatesinkaudioinfo(main_display_list);
 		}
 
+	} else {
+		for(node = main_display_list; node != NULL; node = node->next) {
+			#ifdef DISPLAY_POLICY_BOX
+			operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
+			#endif
+		}
 	}
 	found = 0;
 	for(node = aux_display_list; node != NULL; node = node->next) {
@@ -162,7 +168,7 @@ void DisplayManager::init() {
 		// HDMI device is always enabled
 		if (node->type == DISPLAY_INTERFACE_HDMI)
 			node->enable = 1;
-		operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
+		//operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
 	}
 	ALOGD("aux display enabled interface found %d", found);
 	if(!found) {
@@ -184,6 +190,10 @@ void DisplayManager::init() {
 			operateIfaceEnable(aux_display_list, DISPLAY_OPERATE_WRITE);
 		}
 
+	} else{
+		for(node = aux_display_list; node != NULL; node = node->next) {
+			operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
+		}
 	}
 }
 
