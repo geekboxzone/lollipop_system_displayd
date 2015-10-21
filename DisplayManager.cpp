@@ -804,7 +804,8 @@ int DisplayManager::readConfig(void) {
 		char* tve_mode = (char*) malloc(BUFFER_LENGTH);
 		memset(hdmi_mode, 0, BUFFER_LENGTH);
 		memset(tve_mode, 0, BUFFER_LENGTH);
-		int success = readUbootConfig(hdmi_mode, tve_mode);
+		if (display == 0)
+			int success = readUbootConfig(hdmi_mode, tve_mode);
 		if(strlen(hdmi_mode) && (node->type == DISPLAY_INTERFACE_HDMI)){
 		        memset(node->mode, 0, MODE_LENGTH);
 			memcpy(node->mode, hdmi_mode, MODE_LENGTH);
