@@ -503,6 +503,27 @@ int DisplayManager::readSysfs(void) {
 	return 0;
 }
 
+static char const *const device_template[] =
+{
+	"/dev/block/platform/1021c000.rksdmmc/by-name/baseparamer",
+	"/dev/block/platform/30020000.rksdmmc/by-name/baseparamer",
+	"/dev/block/platform/ff0f0000.rksdmmc/by-name/baseparamer",
+	"/dev/block/rknand_baseparamer",
+	NULL
+};
+
+const char* DisplayManager::GetBaseparameterFile(void)
+{
+	int i = 0;
+
+	while (device_template[i]) {
+		if (!access(device_template[i], R_OK | W_OK))
+			return device_template[i];
+		i++;
+	}
+	return NULL;
+}
+
 #define BASEPARAMER_FILE  "/dev/block/platform/1021c000.rksdmmc/by-name/baseparamer"
 #define BASEPARAMER_FILE_EMMC32  "/dev/block/platform/ff0f0000.rksdmmc/by-name/baseparamer"
 #define BASEPARAMER_FILE_NAND  "/dev/block/rknand_baseparamer"
@@ -549,11 +570,12 @@ void DisplayManager::saveConfig(void) {
 	sync();
 	
 	int file;
-	file = open(BASEPARAMER_FILE, O_RDWR);
-	if (file < 0)
-		file = open(BASEPARAMER_FILE_NAND, O_RDWR);
-	if (file < 0)
-		file = open(BASEPARAMER_FILE_EMMC32, O_RDWR);
+	const char *baseparameterfile = GetBaseparameterFile();
+	if (!baseparameterfile) {
+		ALOGW("base paramter file can not be find");
+		return;
+	}
+	file = open(baseparameterfile, O_RDWR);
 	if (file < 0) {
 		ALOGW("base paramter file can not be opened");
 		return;
@@ -635,15 +657,16 @@ int DisplayManager::readUbootConfig(char *hdmi_mode, char *tve_mode)
 	struct displaynode *node;
 	char buf[BUFFER_LENGTH];
         struct file_base_paramer base_paramer;
-	file = fopen(BASEPARAMER_FILE, "r");
+        const char *baseparameterfile = GetBaseparameterFile();
+
+	if (!baseparameterfile) {
+		ALOGE("baseparameter file not exist");
+		return -1;
+	}
+	file = fopen(baseparameterfile, "r");
 	if(file == NULL ) {
-         file = fopen(BASEPARAMER_FILE_NAND, "r");
-            if(file == NULL )
-             file = fopen(BASEPARAMER_FILE_EMMC32, "r");
-             if(file == NULL ) {
 		ALOGE("%s not exist", BASEPARAMER_FILE_EMMC32);
 		return -1;
-             }
 	}
 
 	if(file != NULL) {

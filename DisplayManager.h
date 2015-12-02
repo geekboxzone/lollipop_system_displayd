@@ -60,6 +60,7 @@ class DisplayManager {
 		int 	string2type(const char *str);
 		void	led_ctrl(struct displaynode *node);
 		void	updatesinkaudioinfo(struct displaynode *node);
+		const char*	GetBaseparameterFile(void);
 };
 
 #endif
