@@ -31,7 +31,9 @@ LOCAL_CFLAGS :=
 ifeq ($(strip $(TARGET_BOARD_PLATFORM_PRODUCT)), box)
 	LOCAL_CFLAGS += -DDISPLAY_POLICY_BOX
 endif
-
+ifeq ($(strip $(TARGET_BOARD_PLATFORM)),rk3228)
+	LOCAL_CFLAGS += -DRK3228
+endif
 LOCAL_SHARED_LIBRARIES := libcutils libnetutils libcrypto libsysutils
 
 ifeq ($(PRODUCT_HAVE_HDMIHDCP2), true)
