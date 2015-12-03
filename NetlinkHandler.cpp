@@ -30,20 +30,20 @@
 #include "Hdcp.h"
 
 NetlinkHandler::NetlinkHandler(NetlinkManager *nm, int listenerSocket,
-                               int format) :
-                        NetlinkListener(listenerSocket, format) {
-    mNm = nm;
-}
+		int format) :
+	NetlinkListener(listenerSocket, format) {
+		mNm = nm;
+	}
 
 NetlinkHandler::~NetlinkHandler() {
 }
 
 int NetlinkHandler::start() {
-    return this->startListener();
+	return this->startListener();
 }
 
 int NetlinkHandler::stop() {
-    return this->stopListener();
+	return this->stopListener();
 }
 
 void NetlinkHandler::onEvent(NetlinkEvent *evt) {
@@ -53,25 +53,25 @@ void NetlinkHandler::onEvent(NetlinkEvent *evt) {
 		ALOGW("No subsystem found in netlink event");
 		return;
 	}
-//	ALOGD("subsys %s", subsys);
+	//	ALOGD("subsys %s", subsys);
 	if (!strcmp(subsys, "display")) {
 		int action = evt->getAction();
 		if (action == evt->NlActionAdd) {
-		    const char *iface = evt->findParam("INTERFACE");
-		    const char *screen = evt->findParam("SCREEN");
-		    if(iface && screen)
-		    	ALOGW("iface id %s screen is %s", iface, screen);
-		    notifyInterfaceAdded(iface, screen);
+			const char *iface = evt->findParam("INTERFACE");
+			const char *screen = evt->findParam("SCREEN");
+			if(iface && screen)
+				ALOGW("iface id %s screen is %s", iface, screen);
+			notifyInterfaceAdded(iface, screen);
 		} else if (action == evt->NlActionRemove) {
-		    const char *iface = evt->findParam("INTERFACE");
-		    const char *screen = evt->findParam("SCREEN");
-		    if(iface && screen)
-		    ALOGW("iface id %s screen is %s", iface, screen);
-		    notifyInterfaceRemoved(iface, screen);
+			const char *iface = evt->findParam("INTERFACE");
+			const char *screen = evt->findParam("SCREEN");
+			if(iface && screen)
+				ALOGW("iface id %s screen is %s", iface, screen);
+			notifyInterfaceRemoved(iface, screen);
 		} else if (action == evt->NlActionChange) {
-	//            evt->dump();
-		    const char *type = evt->findParam("TRIGGER");
-		    notifyInterfaceChanged(type, true);
+			//            evt->dump();
+			const char *type = "TRIGGER";//evt->findParam("TRIGGER");
+			notifyInterfaceChanged(type, true);
 		}
 	} else if (!strcmp(subsys, "hdmi_hdcp2")) {
 		evt->dump();
@@ -85,41 +85,42 @@ void NetlinkHandler::onEvent(NetlinkEvent *evt) {
 }
 
 void NetlinkHandler::notifyInterfaceAdded(const char *name, const char *screen) {
-    char msg[255];
-    int display = 0;
-    if(screen && !strcmp(screen, "1"))
-    	display = 1;
-    
-   	mNm->mDisplayManager->setHDMIEnable(display);
-    snprintf(msg, sizeof(msg), "Iface added %s", name);
+	char msg[255];
+	int display = 0;
+	if(screen && !strcmp(screen, "1"))
+		display = 1;
+
+	mNm->mDisplayManager->setHDMIEnable(display);
+	snprintf(msg, sizeof(msg), "Iface added %s", name);
 	ALOGW("Send msg %s", msg);
-//    mNm->getBroadcaster()->sendBroadcast(ResponseCode::InterfaceChange,
-//            msg, false);
+	//    mNm->getBroadcaster()->sendBroadcast(ResponseCode::InterfaceChange,
+	//            msg, false);
 }
 
 void NetlinkHandler::notifyInterfaceRemoved(const char *name, const char *screen) {
-    char msg[255];
-    int display = 0;
-    if(screen && !strcmp(screen, "1"))
-    	display = 1;
-    mNm->mDisplayManager->setHDMIDisable(display);
-    snprintf(msg, sizeof(msg), "Iface removed %s", name);
+	char msg[255];
+	int display = 0;
+	if(screen && !strcmp(screen, "1"))
+		display = 1;
+	mNm->mDisplayManager->setHDMIDisable(display);
+	snprintf(msg, sizeof(msg), "Iface removed %s", name);
 	ALOGW("Send msg %s", msg);
-//    mNm->getBroadcaster()->sendBroadcast(ResponseCode::InterfaceChange,
-//            msg, false);
+	//    mNm->getBroadcaster()->sendBroadcast(ResponseCode::InterfaceChange,
+	//            msg, false);
 }
 
 void NetlinkHandler::notifyInterfaceChanged(const char *name, bool isUp) {
-    char msg[255];
-    snprintf(msg, sizeof(msg), "Iface changed triggered by %s", name);
-    if(!strcmp(name, "KEY")) {
-//		mNm->mDisplayManager->selectNextIface();
-//    	mNm->getBroadcaster()->sendBroadcast(ResponseCode::InterfaceChange,
-//            msg, false);
-    }
-    else if(!strcmp(name, "WAKEUP")) {
-    	#if DISPLAY_UNTIL_WAKEUP
-    	mNm->mDisplayManager->init();
-    	#endif
-    }
+	char msg[255];
+	snprintf(msg, sizeof(msg), "Iface changed triggered by %s", name);
+	if(1/*!strcmp(name, "KEY")*/) {
+		//		mNm->mDisplayManager->selectNextIface();
+		ALOGD("notifyInterfaceChanged ******************************");
+		mNm->getBroadcaster()->sendBroadcast(ResponseCode::InterfaceChange,
+				msg, false);
+	}
+	else if(!strcmp(name, "WAKEUP")) {
+#if DISPLAY_UNTIL_WAKEUP
+		mNm->mDisplayManager->init();
+#endif
+	}
 }
