@@ -29,6 +29,7 @@
 
 BcshManger::BcshManger()
 {
+#if 0
 	FILE *fd = NULL;
 	char buf[BUFFER_LENGTH];
 	memset(buf, 0, BUFFER_LENGTH);
@@ -39,6 +40,7 @@ BcshManger::BcshManger()
 		fwrite(tmp, strlen(tmp), 1, fd);
 		fclose(fd);
 	}
+#endif
 	init();
 
 }
