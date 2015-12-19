@@ -32,6 +32,9 @@
 
 #define CVBS_MODE_PAL	"720x576i-50"
 #define CVBS_MODE_NTSC	"720x480i-60"
+
+#define MAIN_SCREEN_INFO_FILE "/sys/class/graphics/fb0/screen_info"
+
 enum {
 	DISPLAY_INTERFACE_TV = 1,
 	DISPLAY_INTERFACE_YPbPr,
@@ -43,6 +46,22 @@ enum {
 enum {
 	DISPLAY_OPERATE_READ = 0,
 	DISPLAY_OPERATE_WRITE
+};
+
+enum {
+	SCREEN_NULL = 0,
+	SCREEN_RGB,
+	SCREEN_LVDS,
+	SCREEN_DUAL_LVDS,
+	SCREEN_MCU,
+	SCREEN_TVOUT,
+	SCREEN_HDMI,
+	SCREEN_MIPI,
+	SCREEN_DUAL_MIPI,
+	SCREEN_EDP,
+	SCREEN_TVOUT_TEST,
+	SCREEN_LVDS_10BIT,
+	SCREEN_DUAL_LVDS_10BIT
 };
 
 #define HDMI_VIDEO_YUV420	(4 << 8)
@@ -112,6 +131,31 @@ void DisplayManager::init() {
 			}
 		}
 	}
+
+	#ifdef RK3228
+		int fd, err, type = SCREEN_NULL, hdmiconnect = 0;
+		char *buf = NULL;
+
+		fd = open(MAIN_SCREEN_INFO_FILE, O_RDONLY);
+		if (fd < 0) {
+			ALOGE("open screen info file error: %s", strerror(errno));
+			return;
+		} else {
+			buf = (char*)malloc(BUFFER_LENGTH);
+			memset(buf, 0, BUFFER_LENGTH);
+			err = read(fd, buf, BUFFER_LENGTH);
+			if (err < 0) {
+				ALOGE("read screen info file error: %s", strerror(errno));
+				free(buf);
+				close(fd);
+				return;
+			}
+			close(fd);
+			sscanf(buf, "%*[^:]:%*[^:]:%*[^:]:%*[^:]:%d", &type);
+			free(buf);
+		}
+	#endif
+
 	for(node = main_display_list; node != NULL; node = node->next) {
 		operateIfaceMode(node, DISPLAY_OPERATE_WRITE, node->mode);
 		if(node->enable == 1) {
@@ -135,7 +179,20 @@ void DisplayManager::init() {
 				operateIfaceMode(node, DISPLAY_OPERATE_WRITE, node->mode);
 				node->enable = 1;
 				#ifdef DISPLAY_POLICY_BOX
-				operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
+					#ifdef RK3228
+					if (node->type == DISPLAY_INTERFACE_TV &&
+					    ((type != SCREEN_TVOUT) ||
+					    (type != SCREEN_TVOUT_TEST))) {
+							node->enable = 0;
+							operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
+							node->enable = 1;
+							operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
+					} else {
+						operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
+					}
+					#else
+					operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
+					#endif
 				#endif
 				updatesinkaudioinfo(node);
 				break;
@@ -155,7 +212,22 @@ void DisplayManager::init() {
 	} else {
 		for(node = main_display_list; node != NULL; node = node->next) {
 			#ifdef DISPLAY_POLICY_BOX
-			operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
+				#ifdef RK3228
+				if ((node->type == DISPLAY_INTERFACE_HDMI) && (node->connect == 1))
+					hdmiconnect = 1;
+				if ((node->type == DISPLAY_INTERFACE_TV) && (node->enable == 1) &&
+				    ((type != SCREEN_TVOUT) || (type != SCREEN_TVOUT_TEST)) &&
+				    (hdmiconnect == 0)) {
+					node->enable = 0;
+					operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
+					node->enable = 1;
+					operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
+				} else {
+					operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
+				}
+				#else
+				operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
+				#endif
 			#endif
 		}
 	}
