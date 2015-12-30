@@ -29,9 +29,17 @@
 
 BcshManger::BcshManger()
 {
-#if 0
+	init();
+}
+
+void BcshManger::enable()
+{
 	FILE *fd = NULL;
 	char buf[BUFFER_LENGTH];
+
+	if (mEnable)
+		return;
+
 	memset(buf, 0, BUFFER_LENGTH);
 	strcpy(buf, BCSH_SYSFS_NODE);
 	char tmp[16] = "open";
@@ -40,15 +48,15 @@ BcshManger::BcshManger()
 		fwrite(tmp, strlen(tmp), 1, fd);
 		fclose(fd);
 	}
-#endif
-	init();
-
+	mEnable = true;
+	ALOGD("Enable BCSH");
 }
 
 void BcshManger::init()
 {
 	char property[PROPERTY_VALUE_MAX];
 	
+	mEnable = false;
 	mBrightness = 0;
 	mContrast = 1;
 	mSaturation = 1;
@@ -80,6 +88,8 @@ int BcshManger::setBrightness(int display,int brightness)
 
 	if (brightness == mBrightness)
 		return 0;
+
+	enable();
 
 	memset(buf, 0, BUFFER_LENGTH);
 	strcpy(buf, BCSH_SYSFS_NODE);
@@ -115,6 +125,8 @@ int BcshManger::setContrast(int display, float contrast)
 		return 0;
 
 	ALOGD("%s %d %f", __func__, display, contrast);
+
+	enable();
 	memset(buf, 0, BUFFER_LENGTH);
 	strcpy(buf, BCSH_SYSFS_NODE);
 
@@ -146,6 +158,8 @@ int BcshManger::setSaturation(int display,float saturation)
 		return -1;
 
 	ALOGD("%s %d %f mContrast %f", __func__, display, saturation, mContrast);
+
+	enable();
 	memset(buf, 0, BUFFER_LENGTH);
 	strcpy(buf, BCSH_SYSFS_NODE);
 	fd = fopen(buf, "wb");
@@ -181,6 +195,7 @@ int BcshManger::setHue(int display, float degree)
 
 	ALOGD("%s %d %f", __func__, display, degree);
 
+	enable();
 	memset(buf, 0, BUFFER_LENGTH);
 	strcpy(buf, BCSH_SYSFS_NODE);
 	fd = fopen(buf, "wb");

@@ -16,6 +16,8 @@ private:
 	float mContrast;
 	float mSaturation;
 	float mDegree;
+	bool mEnable;
 	void init();
+	void enable();
 };
 #endif
