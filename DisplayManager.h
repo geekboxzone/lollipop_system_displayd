@@ -16,6 +16,7 @@ struct displaynode {
 	char path[BUFFER_LENGTH];
 	char mode[MODE_LENGTH];
 	char name[NAME_LENGTH];
+	char savemode[MODE_LENGTH];
 	int type;
 	int property;
 	int enable;

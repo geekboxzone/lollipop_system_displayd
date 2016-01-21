@@ -627,11 +627,15 @@ void DisplayManager::saveConfig(void) {
 
 	if(fd != NULL) {
 		for(node = main_display_list; node != NULL; node = node->next) {
+			memset(node->savemode, 0, MODE_LENGTH);
+			memcpy(node->savemode, node->mode, MODE_LENGTH);
 		       memset(buf, 0 , BUFFER_LENGTH);
 		       sprintf(buf, "display=%d,iface=%d,enable=%d,mode=%s\n", node->property, node->type, node->enable, node->mode);
 		       fwrite(buf, 1, strlen(buf), fd);
 		}
 		for(node = aux_display_list; node != NULL; node = node->next) {
+			memset(node->savemode, 0, MODE_LENGTH);
+			memcpy(node->savemode, node->mode, MODE_LENGTH);
 		       memset(buf, 0 , BUFFER_LENGTH);
 		       sprintf(buf, "display=%d,iface=%d,enable=%d,mode=%s\n", node->property, node->type, node->enable, node->mode);
 		       fwrite(buf, 1, strlen(buf), fd);
@@ -915,6 +919,8 @@ int DisplayManager::readConfig(void) {
 			memset(node->mode, 0, MODE_LENGTH);
 			memcpy(node->mode, ptr, ptr_space - ptr);
 		}
+		memset(node->savemode, 0, MODE_LENGTH);
+		memcpy(node->savemode, node->mode, MODE_LENGTH);
 		ALOGD("[%s] display %d iface %d connect %d enable %d mode %s\n", __FUNCTION__,
 			node->property, node->type, node->connect, node->enable, node->mode);
 	}
@@ -1120,7 +1126,10 @@ void DisplayManager::setHDMIEnable(int display) {
 			iface_enabled->enable = 0;
 			operateIfaceEnable(iface_enabled, DISPLAY_OPERATE_WRITE);
 //			iface_hdmi->enable = 1;
-			operateIfaceMode(iface_hdmi, DISPLAY_OPERATE_WRITE, iface_hdmi->mode);
+			if (strlen(iface_hdmi->savemode))
+				operateIfaceMode(iface_hdmi, DISPLAY_OPERATE_WRITE, iface_hdmi->savemode);
+			else
+				operateIfaceMode(iface_hdmi, DISPLAY_OPERATE_WRITE, iface_hdmi->mode);
 			operateIfaceEnable(iface_hdmi, DISPLAY_OPERATE_WRITE);
 		}
 	}
