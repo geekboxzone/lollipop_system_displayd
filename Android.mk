@@ -19,7 +19,8 @@ LOCAL_SRC_FILES:=                       \
                   OtgManager.cpp		\
                   ScreenScaleManager.cpp\
                   Hdcp.cpp \
-                  BcshManager.cpp
+                  BcshManager.cpp \
+                  Cecmanager.cpp
 
 
 LOCAL_MODULE:= displayd
@@ -33,6 +34,9 @@ ifeq ($(strip $(TARGET_BOARD_PLATFORM_PRODUCT)), box)
 endif
 ifeq ($(strip $(TARGET_BOARD_PLATFORM)),rk3228)
 	LOCAL_CFLAGS += -DRK3228
+endif
+ifeq ($(strip $(PLATFORM_VERSION)),4.4.4)
+	LOCAL_CFLAGS += -DANDROID_4_4
 endif
 LOCAL_SHARED_LIBRARIES := libcutils libnetutils libcrypto libsysutils
 

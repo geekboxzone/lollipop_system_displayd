@@ -20,6 +20,8 @@
 #include "Config.h"
 #include "DisplayManager.h"
 #include "ResponseCode.h"
+#include "Cecmanager.h"
+
 
 #define DISPLAY_SYSFS_NODE	"/sys/class/display/"
 #define DISPLAY_TYPE_LCD	"LCD"
@@ -72,6 +74,14 @@ DisplayManager::DisplayManager() {
 	powerup = 0;
 	#if (DISPLAY_UNTIL_WAKEUP == 0)
 	init();
+		#if defined(RK3228) && defined(ANDROID_4_4)
+		if (access(HDMI_DEV_PATH, R_OK | W_OK) == 0) {
+			HdmicecManage *mHdmicecManage = HdmicecManage::GetInstance();
+			if (mHdmicecManage->isconnected())
+				mHdmicecManage->cecenumeration();
+			mHdmicecManage->init_uevent_thread();
+		}
+		#endif
 	#endif
 	ALOGD("[%s] success", __FUNCTION__);
 }

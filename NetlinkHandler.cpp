@@ -28,6 +28,7 @@
 #include "NetlinkManager.h"
 #include "ResponseCode.h"
 #include "Hdcp.h"
+#include "Cecmanager.h"
 
 NetlinkHandler::NetlinkHandler(NetlinkManager *nm, int listenerSocket,
 		int format) :
@@ -95,6 +96,13 @@ void NetlinkHandler::notifyInterfaceAdded(const char *name, const char *screen) 
 	ALOGW("Send msg %s", msg);
 	//    mNm->getBroadcaster()->sendBroadcast(ResponseCode::InterfaceChange,
 	//            msg, false);
+
+#if defined(RK3228) && defined(ANDROID_4_4)
+	if (access(HDMI_DEV_PATH, R_OK | W_OK) == 0) {
+		HdmicecManage *mHdmicecManage = HdmicecManage::GetInstance();
+		mHdmicecManage->cecenumeration();
+	}
+#endif
 }
 
 void NetlinkHandler::notifyInterfaceRemoved(const char *name, const char *screen) {
