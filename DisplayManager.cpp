@@ -180,9 +180,8 @@ void DisplayManager::init() {
 				node->enable = 1;
 				#ifdef DISPLAY_POLICY_BOX
 					#ifdef RK3228
-					if (node->type == DISPLAY_INTERFACE_TV &&
-					    ((type != SCREEN_TVOUT) ||
-					    (type != SCREEN_TVOUT_TEST))) {
+					if ((node->type == DISPLAY_INTERFACE_TV) &&
+					    (type != SCREEN_TVOUT)) {
 							node->enable = 0;
 							operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
 							node->enable = 1;
@@ -216,8 +215,7 @@ void DisplayManager::init() {
 				if ((node->type == DISPLAY_INTERFACE_HDMI) && (node->connect == 1))
 					hdmiconnect = 1;
 				if ((node->type == DISPLAY_INTERFACE_TV) && (node->enable == 1) &&
-				    ((type != SCREEN_TVOUT) || (type != SCREEN_TVOUT_TEST)) &&
-				    (hdmiconnect == 0)) {
+				    (type != SCREEN_TVOUT) && (hdmiconnect == 0)) {
 					node->enable = 0;
 					operateIfaceEnable(node, DISPLAY_OPERATE_WRITE);
 					node->enable = 1;
